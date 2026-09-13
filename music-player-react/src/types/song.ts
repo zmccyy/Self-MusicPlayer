@@ -10,4 +10,6 @@ export type Song = {
   cover: string | null
   addedAt: number
   source?: SongSource
+  year?: number | null
+  genre?: string | null
 }

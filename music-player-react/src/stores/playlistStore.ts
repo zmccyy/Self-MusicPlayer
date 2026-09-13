@@ -5,10 +5,12 @@ import {
   addTracksToPlaylist,
   createPlaylist as createPlaylistApi,
   deletePlaylist as deletePlaylistApi,
+  deleteTrack,
   fetchPlaylists,
   fetchTracks,
   removeTrackFromPlaylist,
   updatePlaylist as updatePlaylistApi,
+  updateTrack,
 } from '../api/client'
 
 type PlaylistId = string | 'all'
@@ -28,6 +30,12 @@ type PlaylistState = {
 
   addSongToPlaylist: (playlistId: string, songId: string) => Promise<void>
   removeSongFromPlaylist: (playlistId: string, songId: string) => Promise<void>
+
+  removeSong: (songId: string) => Promise<void>
+  updateSong: (
+    songId: string,
+    patch: { name?: string; artist?: string; album?: string; genre?: string; year?: number },
+  ) => Promise<void>
 }
 
 function readCurrentPlaylistId(): PlaylistId {
@@ -100,6 +108,29 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => {
           return { ...p, songs: p.songs.filter((id) => id !== songId) }
         }),
       })
+    },
+
+    removeSong: async (songId) => {
+      await deleteTrack(songId)
+      set({
+        songs: get().songs.filter((s) => s.id !== songId),
+        // 后端级联删除了歌单关联，本地同步移除
+        playlists: get().playlists.map((p) =>
+          p.songs.includes(songId) ? { ...p, songs: p.songs.filter((id) => id !== songId) } : p,
+        ),
+      })
+    },
+
+    updateSong: async (songId, patch) => {
+      // Song 领域字段（name）→ API 字段（title）
+      const song = await updateTrack(songId, {
+        title: patch.name,
+        artist: patch.artist,
+        album: patch.album,
+        genre: patch.genre,
+        year: patch.year,
+      })
+      set({ songs: get().songs.map((s) => (s.id === songId ? song : s)) })
     },
   }
 })

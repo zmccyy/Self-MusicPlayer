@@ -10,8 +10,8 @@ process.env.DATA_DIR = mkdtempSync(path.join(tmpdir(), 'music-player-test-'));
 const { createApp } = await import('../src/app.js');
 const { getDb, closeDb } = await import('../src/db.js');
 
-/** Build a minimal valid 16-bit PCM WAV file (1 s of a 440 Hz sine). */
-function makeWav(seconds = 1, sampleRate = 44100): Buffer {
+/** Build a minimal valid 16-bit PCM WAV file (1 s of a sine at `freq` Hz). */
+function makeWav(seconds = 1, sampleRate = 44100, freq = 440): Buffer {
   const numSamples = seconds * sampleRate;
   const dataSize = numSamples * 2;
   const buffer = Buffer.alloc(44 + dataSize);
@@ -29,7 +29,7 @@ function makeWav(seconds = 1, sampleRate = 44100): Buffer {
   buffer.write('data', 36);
   buffer.writeUInt32LE(dataSize, 40);
   for (let i = 0; i < numSamples; i += 1) {
-    const sample = Math.round(Math.sin((2 * Math.PI * 440 * i) / sampleRate) * 8000);
+    const sample = Math.round(Math.sin((2 * Math.PI * freq * i) / sampleRate) * 8000);
     buffer.writeInt16LE(sample, 44 + i * 2);
   }
   return buffer;
@@ -46,10 +46,18 @@ afterAll(() => {
   closeDb();
 });
 
+// Vary tone frequency by name so each upload has unique content
+// (the library deduplicates identical file hashes).
+function nameFreq(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i += 1) h = (h * 31 + name.charCodeAt(i)) % 2000;
+  return 220 + h;
+}
+
 async function uploadWav(name = 'Test Artist - Test Song.wav'): Promise<string> {
   const res = await app
     .post('/api/tracks')
-    .attach('files', makeWav(), name)
+    .attach('files', makeWav(1, 44100, nameFreq(name)), name)
     .expect(201);
   expect(res.body.added).toHaveLength(1);
   return res.body.added[0].id as string;
@@ -133,6 +141,15 @@ describe('tracks', () => {
     await app.get(`/api/tracks/${id}`).expect(404);
   });
 
+  it('reports duplicated content as per-file errors', async () => {
+    const name = 'Dup Artist - Dup Song.wav';
+    const wav = makeWav(1, 44100, nameFreq(name));
+    await app.post('/api/tracks').attach('files', wav, name).expect(201);
+    const res = await app.post('/api/tracks').attach('files', wav, name).expect(400);
+    expect(res.body.added).toHaveLength(0);
+    expect(res.body.errors[0].error).toContain('已存在');
+  });
+
   it('returns lyric payload with none source for wav', async () => {
     const id = await uploadWav();
     const res = await app.get(`/api/tracks/${id}/lyric`).expect(200);
@@ -200,6 +217,31 @@ describe('netease proxy', () => {
 
   it('redirects stream requests to netease', async () => {
     await app.get('/api/netease/stream/186016').expect(302);
+  });
+});
+
+describe('library scan', () => {
+  it('imports audio files from a directory and skips duplicates', async () => {
+    const scanDir = mkdtempSync(path.join(tmpdir(), 'scan-test-'));
+    writeFileSync(path.join(scanDir, 'Scan Artist - Scan Song.wav'), makeWav(1));
+    writeFileSync(path.join(scanDir, 'notes.txt'), 'not audio');
+
+    const first = await app.post('/api/library/scan').send({ path: scanDir }).expect(200);
+    expect(first.body.scanned).toBe(1);
+    expect(first.body.added).toBe(1);
+    expect(first.body.errors).toEqual([]);
+
+    const second = await app.post('/api/library/scan').send({ path: scanDir }).expect(200);
+    expect(second.body.added).toBe(0);
+    expect(second.body.skipped).toBe(1);
+
+    const list = await app.get('/api/tracks?query=scan').expect(200);
+    expect(list.body.tracks).toHaveLength(1);
+  });
+
+  it('rejects missing or non-directory paths', async () => {
+    await app.post('/api/library/scan').send({}).expect(400);
+    await app.post('/api/library/scan').send({ path: 'Z:\\definitely\\missing' }).expect(400);
   });
 });
 

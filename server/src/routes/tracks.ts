@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+import crypto, { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
@@ -7,7 +7,7 @@ import multer from 'multer';
 import type { Request, Response } from 'express';
 import { COVER_DIR, MAX_UPLOAD_BYTES, MUSIC_DIR, mimeForExtension } from '../config.js';
 import { inTransaction, mapTrackRow, queryOne, queryTrackRows, runSql, type TrackRow } from '../db.js';
-import { ApiError, asyncHandler } from '../lib/http.js';
+import { ApiError, asyncHandler, DuplicateImportError } from '../lib/http.js';
 import { fileExtension, isSupportedAudioFile, parseAudioFile } from '../services/metadata.js';
 
 export interface TrackDto {
@@ -80,6 +80,16 @@ export function getTrackRow(id: string): TrackRow {
   return mapTrackRow(row);
 }
 
+function sha1File(filePath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const hash = createHash('sha1');
+    const stream = fs.createReadStream(filePath);
+    stream.on('data', (chunk) => hash.update(chunk));
+    stream.on('end', () => resolve(hash.digest('hex')));
+    stream.on('error', reject);
+  });
+}
+
 export const tracksRouter = Router();
 
 tracksRouter.get(
@@ -139,6 +149,10 @@ tracksRouter.post(
 
 /** Copy a parsed audio file into the library and persist its metadata. */
 export async function importFile(sourcePath: string, originalName: string): Promise<TrackDto> {
+  const checksum = await sha1File(sourcePath);
+  if (queryOne<{ id: string }>('SELECT id FROM tracks WHERE checksum = ?', checksum)) {
+    throw new DuplicateImportError('曲库中已存在相同内容的文件');
+  }
   const parsed = await parseAudioFile(sourcePath, path.basename(originalName));
   const id = crypto.randomUUID();
   const ext = fileExtension(originalName) || fileExtension(sourcePath);
@@ -159,8 +173,8 @@ export async function importFile(sourcePath: string, originalName: string): Prom
       `INSERT INTO tracks (
         id, title, artist, album, album_artist, genre, year, track_no, disc_no,
         duration, format, file_name, file_size, bitrate, sample_rate,
-        has_cover, has_lyric, source, remote_id, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'local', NULL, ?)`,
+        has_cover, has_lyric, source, remote_id, checksum, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'local', NULL, ?, ?)`,
       id,
       parsed.title ?? path.basename(originalName),
       parsed.artist ?? '未知艺术家',
@@ -178,6 +192,7 @@ export async function importFile(sourcePath: string, originalName: string): Prom
       parsed.sampleRate,
       parsed.cover ? 1 : 0,
       parsed.lyrics ? 1 : 0,
+      checksum,
       now,
     );
     if (parsed.lyrics) {

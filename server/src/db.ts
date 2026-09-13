@@ -22,6 +22,8 @@ export interface TrackRow {
   hasLyric: 0 | 1;
   source: 'local' | 'netease';
   remoteId: string | null;
+  /** SHA-1 of file content, used to skip duplicate imports. */
+  checksum: string | null;
   createdAt: string;
 }
 
@@ -84,6 +86,24 @@ CREATE TABLE IF NOT EXISTS lyrics (
 );
 `;
 
+/**
+ * Additive migrations for databases created before a column existed.
+ * Each entry runs at most once; failures (column already present) are ignored.
+ */
+const MIGRATIONS: string[] = [
+  'ALTER TABLE tracks ADD COLUMN checksum TEXT',
+];
+
+function runMigrations(conn: DatabaseSync): void {
+  for (const sql of MIGRATIONS) {
+    try {
+      conn.exec(sql);
+    } catch {
+      // Column already exists — nothing to do.
+    }
+  }
+}
+
 let db: DatabaseSync | null = null;
 
 export function getDb(): DatabaseSync {
@@ -95,6 +115,7 @@ export function getDb(): DatabaseSync {
   db.exec('PRAGMA journal_mode = WAL;');
   db.exec('PRAGMA foreign_keys = ON;');
   db.exec(SCHEMA);
+  runMigrations(db);
   return db;
 }
 
@@ -130,6 +151,7 @@ export function mapTrackRow(row: Record<string, unknown>): TrackRow {
     hasLyric: row.has_lyric === 1 ? 1 : 0,
     source: row.source === 'netease' ? 'netease' : 'local',
     remoteId: (row.remote_id as string) ?? null,
+    checksum: (row.checksum as string) ?? null,
     createdAt: String(row.created_at),
   };
 }

@@ -10,6 +10,13 @@ export class ApiError extends Error {
   }
 }
 
+/** Thrown when importing a file whose content hash already exists in the library. */
+export class DuplicateImportError extends Error {
+  constructor(message = 'duplicate file already in library') {
+    super(message);
+  }
+}
+
 export function asyncHandler(
   handler: (req: Request, res: Response, next: NextFunction) => Promise<unknown>,
 ): (req: Request, res: Response, next: NextFunction) => void {

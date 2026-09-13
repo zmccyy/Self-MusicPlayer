@@ -15,32 +15,28 @@ export interface PlaylistDto {
   trackIds: string[];
 }
 
-function mapPlaylistRow(row: Record<string, unknown>): PlaylistDto {
-  const trackIds = queryAll<{ track_id: string }>(
-    'SELECT track_id FROM playlist_tracks WHERE playlist_id = ? ORDER BY position ASC',
-    String(row.id),
-  ).map((r) => r.track_id);
+function playlistFromRaw(row: Record<string, unknown>): PlaylistRow {
   return {
     id: String(row.id),
     name: String(row.name),
     description: String(row.description ?? ''),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
-    trackCount: trackIds.length,
-    trackIds,
   };
+}
+
+function mapPlaylistRow(row: PlaylistRow): PlaylistDto {
+  const trackIds = queryAll<{ track_id: string }>(
+    'SELECT track_id FROM playlist_tracks WHERE playlist_id = ? ORDER BY position ASC',
+    row.id,
+  ).map((r) => r.track_id);
+  return { ...row, trackCount: trackIds.length, trackIds };
 }
 
 function getPlaylistRow(id: string): PlaylistRow {
   const row = queryOne<Record<string, unknown>>('SELECT * FROM playlists WHERE id = ?', id);
   if (!row) throw new ApiError(404, `Playlist not found: ${id}`);
-  return {
-    id: String(row.id),
-    name: String(row.name),
-    description: String(row.description ?? ''),
-    createdAt: String(row.created_at),
-    updatedAt: String(row.updated_at),
-  };
+  return playlistFromRaw(row);
 }
 
 function orderedTracks(playlistId: string) {
@@ -76,8 +72,8 @@ export const playlistsRouter = Router();
 playlistsRouter.get(
   '/',
   asyncHandler(async (_req, res) => {
-    const rows = queryAll<PlaylistRow>('SELECT * FROM playlists ORDER BY created_at ASC');
-    res.json({ playlists: rows.map(mapPlaylistRow) });
+    const rows = queryAll<Record<string, unknown>>('SELECT * FROM playlists ORDER BY created_at ASC');
+    res.json({ playlists: rows.map(playlistFromRaw).map(mapPlaylistRow) });
   }),
 );
 

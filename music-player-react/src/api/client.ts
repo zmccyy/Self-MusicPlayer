@@ -88,6 +88,8 @@ export function trackToSong(track: ApiTrack): Song {
     cover: track.coverUrl,
     addedAt: Date.parse(track.createdAt) || 0,
     source: track.source === 'netease' ? 'online' : 'local',
+    year: track.year,
+    genre: track.genre,
   }
 }
 
@@ -125,6 +127,21 @@ export async function uploadTracks(files: File[]): Promise<{ added: Song[]; erro
 
 export async function deleteTrack(id: string): Promise<void> {
   await request<{ ok: boolean }>(`/api/tracks/${id}`, { method: 'DELETE' })
+}
+
+export interface ScanResult {
+  scanned: number
+  added: number
+  skipped: number
+  failed: number
+  errors: { fileName: string; error: string }[]
+}
+
+export async function scanLibrary(dirPath: string): Promise<ScanResult> {
+  return request<ScanResult>(
+    '/api/library/scan',
+    json({ method: 'POST', body: JSON.stringify({ path: dirPath }) }),
+  )
 }
 
 export async function updateTrack(

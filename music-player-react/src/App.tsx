@@ -4,6 +4,7 @@ import { PlaylistSidebar } from './components/playlist/PlaylistSidebar'
 import { SongList } from './components/playlist/SongList'
 import { PlaylistModal } from './components/playlist/PlaylistModal'
 import { LyricPanel } from './components/lyric/LyricPanel'
+import { ScanDialog } from './components/library/ScanDialog'
 import { useFileUpload } from './hooks/useFileUpload'
 import { useMediaSession } from './hooks/useMediaSession'
 import { useServiceWorker } from './hooks/useServiceWorker'
@@ -26,6 +27,7 @@ export default function App() {
   const setPlayerPlaylist = usePlayerStore((s) => s.setPlaylist)
 
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false)
+  const [isScanOpen, setIsScanOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const { uploadFiles, isUploading, error } = useFileUpload()
@@ -91,6 +93,13 @@ export default function App() {
               >
                 {isUploading ? '上传中...' : '上传音乐'}
               </button>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                onClick={() => setIsScanOpen(true)}
+              >
+                扫描导入
+              </button>
               <SearchBox />
 
               <button
@@ -129,6 +138,7 @@ export default function App() {
       </div>
 
       <PlaylistModal open={isPlaylistModalOpen} onOpenChange={setIsPlaylistModalOpen} />
+      <ScanDialog open={isScanOpen} onOpenChange={setIsScanOpen} />
 
       {error ? (
         <div className="mx-auto mt-4 max-w-6xl rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">

@@ -99,8 +99,10 @@ function runMigrations(conn: DatabaseSync): void {
   for (const sql of MIGRATIONS) {
     try {
       conn.exec(sql);
-    } catch {
-      // Column already exists — nothing to do.
+    } catch (err) {
+      // 幂等迁移：列已存在是预期的失败；其余错误必须暴露出来。
+      if (err instanceof Error && /duplicate column/i.test(err.message)) continue;
+      throw err;
     }
   }
 }

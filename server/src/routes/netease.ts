@@ -113,17 +113,50 @@ neteaseRouter.get(
 );
 
 /**
- * Redirect to NetEase's public song URL. The upstream 302s to the real audio
- * file (or a short placeholder clip for VIP-only tracks); the browser follows
- * the redirect itself so Range requests keep working end to end.
+ * Proxy the NetEase stream server-side instead of redirecting.
+ * A 302 would make the browser hit music.163.com directly; its redirect
+ * response carries no CORS headers, so with crossOrigin=anonymous (needed
+ * for the WebAudio equalizer) the media load fails. Proxying keeps the
+ * request same-origin and preserves Range seeking.
  */
 neteaseRouter.get(
   '/stream/:songId',
-  (req, res) => {
+  asyncHandler(async (req, res) => {
     const songId = String(req.params.songId);
     if (!/^\d+$/.test(songId)) throw new ApiError(400, 'songId must be numeric');
-    res.redirect(302, `${NETEASE_BASE}/song/media/outer/url?id=${encodeURIComponent(songId)}`);
-  },
+
+    const upstream = await fetch(`${NETEASE_BASE}/song/media/outer/url?id=${encodeURIComponent(songId)}`, {
+      headers: {
+        'User-Agent': UA,
+        Referer: `${NETEASE_BASE}/`,
+        ...(req.headers.range ? { Range: String(req.headers.range) } : {}),
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!upstream.ok || !upstream.body) {
+      throw new ApiError(502, `上游返回 HTTP ${upstream.status}（歌曲可能为 VIP 或已下架）`);
+    }
+    const contentType = upstream.headers.get('content-type') ?? '';
+    if (!contentType.includes('audio') && !contentType.includes('octet-stream')) {
+      throw new ApiError(502, '上游返回了非音频内容（歌曲可能为 VIP，仅提供试听提示页）');
+    }
+
+    const passthrough = ['content-type', 'content-length', 'content-range', 'accept-ranges'];
+    for (const header of passthrough) {
+      const value = upstream.headers.get(header);
+      if (value) res.setHeader(header, value);
+    }
+    if (!upstream.headers.get('accept-ranges')) res.setHeader('Accept-Ranges', 'bytes');
+    res.status(upstream.status);
+
+    try {
+      await pipeline(Readable.fromWeb(upstream.body as import('node:stream/web').ReadableStream), res);
+    } catch (err) {
+      // 浏览器 seek/切歌会中断连接，属正常路径，不要触发 500。
+      if (!res.headersSent) throw err;
+    }
+  }),
 );
 
 /** Minimum plausible full-song size; VIP placeholder clips are far smaller. */

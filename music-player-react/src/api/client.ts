@@ -246,7 +246,7 @@ export async function searchNetease(keyword: string, limit = 20): Promise<Online
   return data.songs
 }
 
-/** 在线歌曲临时播放用的流地址（302 到 NetEase）。 */
+/** 在线歌曲临时播放用的流地址（服务端代理，同源）。 */
 export function neteaseStreamUrl(songId: string): string {
   return `/api/netease/stream/${songId}`
 }

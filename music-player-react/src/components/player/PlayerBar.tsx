@@ -81,7 +81,7 @@ export function PlayerBar() {
               </Dialog.Trigger>
               <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/55 backdrop-blur-sm" />
-                <Dialog.Content className="fixed left-1/2 top-1/2 w-[520px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border-strong bg-elevated p-4 shadow-2xl">
+                <Dialog.Content className="fixed left-1/2 top-1/2 w-[520px] max-w-[92vw] max-h-[85vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-border-strong bg-elevated p-4 shadow-2xl">
                   <Dialog.Title className="text-base font-medium text-text-primary">
                     音效均衡器
                   </Dialog.Title>

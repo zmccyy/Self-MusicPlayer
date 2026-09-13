@@ -11,8 +11,8 @@ type AudioContextCtor = typeof AudioContext | (new () => AudioContext)
 
 /**
  * 音效均衡器 WebAudio 服务：
- * - 基于同一个 HTMLAudioElement（由 audioService 提供）
- * - 6 段 PEQ（peaking）滤波链
+ * - 基于同一个 HTMLAudioElement（由 audioService 提供，crossOrigin=anonymous）
+ * - 10 段 PEQ（peaking）滤波链
  * - 支持 enable/disable（disable 时旁路直连 destination）
  */
 export class EqualizerService {

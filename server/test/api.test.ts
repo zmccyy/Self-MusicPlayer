@@ -199,7 +199,9 @@ describe('playlists', () => {
   });
 });
 
-describe('netease proxy', () => {
+// NetEase 代理测试依赖真实外网；默认跳过，设 RUN_NETEASE_TESTS=1 开启。
+const runNetease = Boolean(process.env.RUN_NETEASE_TESTS)
+describe.skipIf(!runNetease)('netease proxy', () => {
   it('searches and normalizes songs', async () => {
     const res = await app.get('/api/netease/search').query({ keyword: '晴天' }).expect(200);
     expect(Array.isArray(res.body.songs)).toBe(true);
@@ -215,8 +217,20 @@ describe('netease proxy', () => {
     await app.get('/api/netease/search').expect(400);
   });
 
-  it('redirects stream requests to netease', async () => {
-    await app.get('/api/netease/stream/186016').expect(302);
+  it('proxies stream requests from the same origin', async () => {
+    // 2730151393 is a free (fee=0) track whose outer URL serves real audio
+    const res = await app.get('/api/netease/stream/2730151393').expect(200);
+    expect(res.headers['content-type']).toContain('audio');
+    expect(Number(res.headers['content-length'])).toBeGreaterThan(0);
+  });
+
+  it('rejects VIP tracks whose outer URL serves an HTML notice page', async () => {
+    // 186016 (周杰伦-晴天) is VIP-gated upstream: outer URL returns a text/html page
+    const res = await app.get('/api/netease/stream/186016');
+    expect([502]).toContain(res.status);
+    if (res.status === 502) {
+      expect(res.body.error).toContain('非音频内容');
+    }
   });
 });
 

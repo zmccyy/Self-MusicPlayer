@@ -216,7 +216,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
       let prevIndex: number
       if (state.playMode === 'shuffle') {
-        prevIndex = Math.floor(Math.random() * state.playlist.length)
+        // 与 next 一致：随机但避免连播同一首（列表只有一首时只能重复）
+        if (state.playlist.length === 1) {
+          prevIndex = state.currentIndex
+        } else {
+          do {
+            prevIndex = Math.floor(Math.random() * state.playlist.length)
+          } while (prevIndex === state.currentIndex)
+        }
       } else {
         prevIndex = state.currentIndex - 1
         if (prevIndex < 0) prevIndex = state.playlist.length - 1

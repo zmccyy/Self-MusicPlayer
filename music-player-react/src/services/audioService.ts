@@ -21,6 +21,9 @@ export class AudioService {
   constructor() {
     this.audio = new Audio()
     this.audio.preload = 'metadata'
+    // 允许跨源在线流进入 WebAudio 图（NetEase CDN 返回 ACAO:*）。
+    // 不设置的话，一旦均衡器 init 过，跨源媒体经 MediaElementSource 会输出静音。
+    this.audio.crossOrigin = 'anonymous'
     // 挂载到 DOM（隐藏）：便于自动化测试/调试观测播放状态
     this.audio.setAttribute('data-audio-service', '')
     this.audio.style.display = 'none'

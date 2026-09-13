@@ -42,7 +42,8 @@ npm run dev
 - 歌曲信息编辑（标题/歌手/专辑/流派/年份）
 - 歌曲删除（同时清理音频文件、封面与歌词，歌单关联级联移除）
 - 曲库搜索（按标题/歌手/专辑模糊匹配）
-- **数据由后端 SQLite + 文件系统管理，刷新页面后播放不失效**
+- **元数据与音频文件由后端 SQLite + 文件系统管理，刷新页面后曲库与播放链接不失效**
+  （播放队列/进度暂不持久化）
 
 ### 歌单
 
@@ -61,8 +62,10 @@ npm run dev
 ### 在线音乐（网易云音乐）
 
 - 在线搜索（服务端代理，无需用户自建 CORS 代理）
-- 在线试听播放（302 流式重定向，支持 Range）
+- 在线试听播放（服务端代理流，同源访问，支持 Range，与均衡器兼容）
 - 一键收藏下载到本地曲库（VIP 试听片段基于时长校验自动拒绝并提示）
+- 历史版本曾内置 QQ 音乐搜索（用户自配代理），重构后由服务端 NetEase
+  代理取代
 
 ### 音效
 
@@ -92,7 +95,7 @@ npm run dev
 | POST | `/api/library/scan` | 扫描目录导入 `{ path }` |
 | GET | `/api/netease/search` | NetEase 搜索代理 |
 | GET | `/api/netease/lyrics/:songId` | NetEase 歌词（含翻译） |
-| GET | `/api/netease/stream/:songId` | 在线试听（302） |
+| GET | `/api/netease/stream/:songId` | 在线试听（服务端代理流，支持 Range） |
 | POST | `/api/netease/download/:songId` | 下载入库（试听片段自动拒绝） |
 
 数据与音频文件位于 `server/data/`（SQLite + `music/` + `covers/`），已被 gitignore。
@@ -109,7 +112,8 @@ npm test             # Vitest
 # 后端
 cd server
 npm run type-check   # TS strict + noUncheckedIndexedAccess
-npm test             # Vitest + supertest（18 个 API 用例）
+npm test             # Vitest + supertest（NetEase 代理用例需真实网络，
+                     # 设 RUN_NETEASE_TESTS=1 开启，默认跳过）
 
 # 端到端（需前后端均在运行，Python + Playwright）
 cd music-player-react

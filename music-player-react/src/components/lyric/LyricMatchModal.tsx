@@ -8,7 +8,6 @@ import {
 } from '../../api/client'
 import type { Song } from '../../types/song'
 import { usePlaylistStore } from '../../stores/playlistStore'
-import { LrcParser } from '../../utils/lrcParser'
 
 type Props = {
   song: Song | null
@@ -138,9 +137,4 @@ export function LyricMatchModal({ song, open, onOpenChange }: Props) {
       </Dialog.Portal>
     </Dialog.Root>
   )
-}
-
-/** 供预览使用：解析前几行（未被 UI 直接依赖时便于测试）。 */
-export function previewLines(lrc: string, translation?: string | null) {
-  return LrcParser.parse(lrc, translation).slice(0, 5)
 }

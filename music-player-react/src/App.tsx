@@ -40,8 +40,12 @@ export default function App() {
     if (currentPlaylistId === 'all') return songs
     const playlist = playlists.find((p) => p.id === currentPlaylistId)
     if (!playlist) return []
-    const songIdSet = new Set(playlist.songs)
-    return songs.filter((s) => songIdSet.has(s.id))
+    // 按歌单内保存的顺序展示（不能只用 filter，会丢失歌单排序）
+    const byId = new Map(songs.map((s) => [s.id, s]))
+    return playlist.songs.flatMap((id) => {
+      const song = byId.get(id)
+      return song ? [song] : []
+    })
   }, [currentPlaylistId, playlists, songs])
 
   useEffect(() => {

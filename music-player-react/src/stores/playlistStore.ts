@@ -10,6 +10,7 @@ import {
   fetchTracks,
   removeTrackFromPlaylist,
   updatePlaylist as updatePlaylistApi,
+  reorderPlaylist as reorderPlaylistApi,
   updateTrack,
 } from '../api/client'
 
@@ -30,6 +31,7 @@ type PlaylistState = {
 
   addSongToPlaylist: (playlistId: string, songId: string) => Promise<void>
   removeSongFromPlaylist: (playlistId: string, songId: string) => Promise<void>
+  reorderPlaylist: (playlistId: string, songIds: string[]) => Promise<void>
 
   removeSong: (songId: string) => Promise<void>
   updateSong: (
@@ -107,6 +109,15 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => {
           if (p.id !== playlistId) return p
           return { ...p, songs: p.songs.filter((id) => id !== songId) }
         }),
+      })
+    },
+
+    reorderPlaylist: async (playlistId, songIds) => {
+      await reorderPlaylistApi(playlistId, songIds)
+      set({
+        playlists: get().playlists.map((p) =>
+          p.id === playlistId ? { ...p, songs: songIds } : p,
+        ),
       })
     },
 

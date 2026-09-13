@@ -22,6 +22,8 @@ type PlayerState = {
 
   // actions
   setPlaylist: (songs: Song[]) => void
+  enqueueAndPlay: (song: Song) => void
+  replaceSong: (tempId: string, realSong: Song) => void
   play: (index: number) => void
   pause: () => void
   togglePlay: () => void
@@ -90,6 +92,16 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     playlist: [],
 
     setPlaylist: (songs) => {
+      const state = get()
+      // 曲库刷新/歌单切换时，如果正在播的歌还在新列表里，保持播放不中断；
+      // 否则才重置到列表开头。
+      if (state.currentSong) {
+        const idx = songs.findIndex((s) => s.id === state.currentSong?.id)
+        if (idx >= 0) {
+          set({ playlist: songs, currentIndex: idx, currentSong: songs[idx] })
+          return
+        }
+      }
       audioService.pause()
       set({
         playlist: songs,
@@ -98,6 +110,31 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         currentTime: 0,
         duration: 0,
         isPlaying: false,
+      })
+    },
+
+    /** 把临时歌曲（如在线试听）追加到当前队列末尾并立即播放。 */
+    enqueueAndPlay: (song) => {
+      const state = get()
+      const existing = state.playlist.findIndex((s) => s.id === song.id)
+      if (existing >= 0) {
+        get().play(existing)
+        return
+      }
+      const nextPlaylist = [...state.playlist, song]
+      set({ playlist: nextPlaylist })
+      get().play(nextPlaylist.length - 1)
+    },
+
+    /** 在线歌曲入库成功后，把队列中的临时对象替换为正式曲目（不打断播放）。 */
+    replaceSong: (tempId, realSong) => {
+      const state = get()
+      const idx = state.playlist.findIndex((s) => s.id === tempId)
+      if (idx < 0) return
+      const nextPlaylist = state.playlist.map((s) => (s.id === tempId ? realSong : s))
+      set({
+        playlist: nextPlaylist,
+        currentSong: state.currentSong?.id === tempId ? realSong : state.currentSong,
       })
     },
 

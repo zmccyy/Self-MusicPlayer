@@ -239,14 +239,20 @@ tracksRouter.delete(
   '/:id',
   asyncHandler(async (req, res) => {
     const row = getTrackRow(String(req.params.id));
-    runSql('DELETE FROM tracks WHERE id = ?', row.id);
-    await fsp.rm(path.join(MUSIC_DIR, row.fileName), { force: true }).catch(() => {});
-    for (const ext of ['.jpg', '.png']) {
-      await fsp.rm(path.join(COVER_DIR, `${row.id}${ext}`), { force: true }).catch(() => {});
-    }
+    await removeTrackCompletely(row.id);
     res.json({ ok: true });
   }),
 );
+
+/** Remove a track row plus its audio/cover/lyric artifacts. */
+export async function removeTrackCompletely(id: string): Promise<void> {
+  const row = getTrackRow(id);
+  runSql('DELETE FROM tracks WHERE id = ?', row.id);
+  await fsp.rm(path.join(MUSIC_DIR, row.fileName), { force: true }).catch(() => {});
+  for (const ext of ['.jpg', '.png']) {
+    await fsp.rm(path.join(COVER_DIR, `${row.id}${ext}`), { force: true }).catch(() => {});
+  }
+}
 
 tracksRouter.get(
   '/:id/stream',

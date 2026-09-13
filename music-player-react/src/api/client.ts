@@ -235,6 +235,8 @@ export interface OnlineSong {
   album: string | null
   duration: number
   coverUrl: string | null
+  /** 0 = free, 1 = free trial, 8 = VIP-only */
+  fee: number
 }
 
 export async function searchNetease(keyword: string, limit = 20): Promise<OnlineSong[]> {
@@ -242,6 +244,27 @@ export async function searchNetease(keyword: string, limit = 20): Promise<Online
     `/api/netease/search?keyword=${encodeURIComponent(keyword)}&limit=${limit}`,
   )
   return data.songs
+}
+
+/** 在线歌曲临时播放用的流地址（302 到 NetEase）。 */
+export function neteaseStreamUrl(songId: string): string {
+  return `/api/netease/stream/${songId}`
+}
+
+export function neteaseTempSongId(songId: string): string {
+  return `netease:${songId}`
+}
+
+/** 把在线歌曲下载入库（VIP 试听片段会被后端拒绝）。 */
+export async function saveNeteaseTrack(
+  songId: string,
+  info: { name: string; artists: string; durationSec: number },
+): Promise<Song> {
+  const data = await request<{ track: ApiTrack }>(
+    `/api/netease/download/${songId}`,
+    json({ method: 'POST', body: JSON.stringify(info) }),
+  )
+  return trackToSong(data.track)
 }
 
 export interface NeteaseLyrics {

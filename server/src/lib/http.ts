@@ -12,7 +12,7 @@ export class ApiError extends Error {
 
 /** Thrown when importing a file whose content hash already exists in the library. */
 export class DuplicateImportError extends Error {
-  constructor(message = 'duplicate file already in library') {
+  constructor(message = '曲库中已存在相同内容的文件') {
     super(message);
   }
 }
@@ -32,6 +32,10 @@ export function notFoundHandler(_req: Request, res: Response): void {
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: unknown): void {
   if (err instanceof ApiError) {
     res.status(err.status).json({ error: err.message, details: err.details });
+    return;
+  }
+  if (err instanceof DuplicateImportError) {
+    res.status(409).json({ error: err.message });
     return;
   }
   console.error('[server] Unhandled error:', err);

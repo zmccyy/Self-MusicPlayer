@@ -30,12 +30,3 @@ export function isSupportedAudioFile(file: File): boolean {
     return mime === type || (sub ? mime.includes(sub) : false)
   })
 }
-
-export function getAudioDuration(url: string): Promise<number> {
-  return new Promise((resolve) => {
-    const audio = new Audio()
-    audio.onloadedmetadata = () => resolve(audio.duration)
-    audio.onerror = () => resolve(0)
-    audio.src = url
-  })
-}

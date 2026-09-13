@@ -1,5 +1,6 @@
-import type { Lyric } from '../types/lyric'
-import { storageService } from './storageService'
+import type { Lyric, LyricSource } from '../types/lyric'
+import { LrcParser } from '../utils/lrcParser'
+import { fetchTrackLyric, saveTrackLyric } from '../api/client'
 
 function findActiveLyricIndex(lines: Lyric['lines'], currentTimeSeconds: number) {
   if (!lines.length) return -1
@@ -12,18 +13,20 @@ function findActiveLyricIndex(lines: Lyric['lines'], currentTimeSeconds: number)
   return -1
 }
 
+/** 歌词正文由后端存储（嵌入式/上传/手动编辑统一入口），前端负责 LRC 解析。 */
 export async function getLyricBySongId(songId: string): Promise<Lyric | null> {
   if (!songId) return null
-  const lyric = await storageService
-    .table<Lyric, string>('lyrics')
-    .where('songId')
-    .equals(songId)
-    .first()
-  return lyric || null
+  const payload = await fetchTrackLyric(songId)
+  if (!payload.lyric) return null
+  const lines = LrcParser.parse(payload.lyric)
+  const source: LyricSource =
+    payload.source === 'embedded' || payload.source === 'external' ? payload.source : 'manual'
+  return { id: `lyric_${songId}`, songId, lines, source }
 }
 
 export async function saveLyric(lyric: Lyric): Promise<void> {
-  await storageService.table<Lyric, string>('lyrics').put(lyric)
+  const text = LrcParser.serialize(lyric.lines)
+  await saveTrackLyric(lyric.songId, text, lyric.source)
 }
 
 export { findActiveLyricIndex }

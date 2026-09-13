@@ -21,6 +21,12 @@ export class AudioService {
   constructor() {
     this.audio = new Audio()
     this.audio.preload = 'metadata'
+    // 挂载到 DOM（隐藏）：便于自动化测试/调试观测播放状态
+    this.audio.setAttribute('data-audio-service', '')
+    this.audio.style.display = 'none'
+    if (typeof document !== 'undefined') {
+      document.body.appendChild(this.audio)
+    }
   }
 
   /**
@@ -64,8 +70,10 @@ export class AudioService {
 
   play(url: string) {
     this.audio.src = url
-    // play() 可能被浏览器策略拦截，这里不抛错导致应用崩溃
-    void this.audio.play().catch(() => {})
+    // play() 可能被浏览器策略拦截，这里不抛错导致应用崩溃，但要在控制台留下线索
+    void this.audio.play().catch((err) => {
+      console.error('[audioService] play failed:', url, err)
+    })
   }
 
   pause() {
@@ -73,8 +81,13 @@ export class AudioService {
   }
 
   togglePlay(url?: string) {
-    if (url) this.play(url)
-    else void this.audio.play().catch(() => {})
+    if (url) {
+      this.play(url)
+      return
+    }
+    void this.audio.play().catch((err) => {
+      console.error('[audioService] resume failed:', err)
+    })
   }
 
   seek(timeSeconds: number) {

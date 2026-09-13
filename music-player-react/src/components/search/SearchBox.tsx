@@ -1,49 +1,22 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { searchSongs, type SearchSongsParams } from '../../services/apiGateway'
-import type { ApiSearchProvider } from '../../api/types'
+import { fetchTracks } from '../../api/client'
 import type { Song } from '../../types/song'
-import { upsertSong } from '../../services/storageService'
 import { usePlaylistStore } from '../../stores/playlistStore'
 import { usePlayerStore } from '../../stores/playerStore'
 import { SearchResults } from './SearchResults'
-import { ApiConfigModal } from './ApiConfigModal'
 
-const PROVIDER_LABEL: Record<ApiSearchProvider | 'both', string> = {
-  both: '网易云 + QQ',
-  netease: '网易云',
-  qq: 'QQ 音乐',
-}
-
-type ProviderValue = ApiSearchProvider | 'both'
-
-function getProviderSearchParams(
-  keyword: string,
-  provider: ProviderValue,
-  limit: number,
-): SearchSongsParams {
-  return {
-    keyword,
-    limit,
-    providers: provider === 'both' ? 'both' : provider,
-  }
-}
-
+/** 本地曲库搜索：直接查询后端曲库并播放结果。 */
 export function SearchBox() {
   const [open, setOpen] = useState(false)
-  const [apiConfigOpen, setApiConfigOpen] = useState(false)
 
   const [keyword, setKeyword] = useState('')
-  const [provider, setProvider] = useState<ProviderValue>('both')
-  const [limit] = useState(12)
 
   const [results, setResults] = useState<Song[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [errorText, setErrorText] = useState<string | null>(null)
 
-  const loadAllPlaylists = usePlaylistStore((s) => s.loadAll)
-  const currentPlaylistId = usePlaylistStore((s) => s.currentPlaylistId)
-  const addSongToPlaylist = usePlaylistStore((s) => s.addSongToPlaylist)
+  const setCurrentPlaylistId = usePlaylistStore((s) => s.setCurrentPlaylistId)
 
   const waitForSongInPlayer = async (songId: string, timeoutMs: number) => {
     const start = Date.now()
@@ -59,28 +32,24 @@ export function SearchBox() {
     setErrorText(null)
     setIsLoading(true)
     try {
-      // 1) 写入本地库（便于在现有歌单/列表体系中播放/切歌）
-      await upsertSong(song)
-
-      // 2) 如当前歌单不是“全部”，也把歌曲追加进该歌单
-      if (currentPlaylistId !== 'all') {
-        await addSongToPlaylist(currentPlaylistId, song.id)
+      const st = await waitForSongInPlayer(song.id, 500)
+      if (st) {
+        const idx = st.playlist.findIndex((s) => s.id === song.id)
+        if (idx >= 0) {
+          st.play(idx)
+          return
+        }
       }
-
-      // 3) 重新加载本地库，使 App/PlayerBar 自动切到新歌
-      await loadAllPlaylists()
-
-      // 4) 等播放器侧拿到新的 playlist 后再触发播放
-      const st = await waitForSongInPlayer(song.id, 3000)
-      if (!st) {
-        // 极端兜底：强行替换播放器播放列表并开始播放
+      // 当前歌单里没有这首歌：切回“全部音乐”再播放
+      setCurrentPlaylistId('all')
+      const fallback = await waitForSongInPlayer(song.id, 2000)
+      const idx = fallback?.playlist.findIndex((s) => s.id === song.id) ?? -1
+      if (fallback && idx >= 0) {
+        fallback.play(idx)
+      } else {
         usePlayerStore.getState().setPlaylist([song])
         usePlayerStore.getState().play(0)
-        return
       }
-
-      const idx = st.playlist.findIndex((s) => s.id === song.id)
-      if (idx >= 0) st.play(idx)
     } catch (e) {
       const msg = e instanceof Error ? e.message : '播放失败'
       setErrorText(msg)
@@ -97,11 +66,11 @@ export function SearchBox() {
     setErrorText(null)
 
     try {
-      const params = getProviderSearchParams(kw, provider, limit)
-      const songs = await searchSongs(params)
+      const songs = await fetchTracks(kw)
       setResults(songs)
+      if (songs.length === 0) setErrorText('本地曲库中没有匹配的歌曲')
     } catch (e) {
-      const msg = e instanceof Error ? e.message : '第三方搜索失败'
+      const msg = e instanceof Error ? e.message : '搜索失败'
       setErrorText(msg)
       setResults([])
     } finally {
@@ -109,94 +78,64 @@ export function SearchBox() {
     }
   }
 
-  const providerOptions = useMemo(() => {
-    const order: ProviderValue[] = ['both', 'netease', 'qq']
-    return order.map((p) => ({ value: p, label: PROVIDER_LABEL[p] }))
-  }, [])
-
   return (
-    <>
-      <Dialog.Root open={open} onOpenChange={setOpen}>
-        <Dialog.Trigger asChild>
-          <button className="btn btn-ghost" type="button" aria-label="在线搜索" title="在线搜索">
-            在线搜索
-          </button>
-        </Dialog.Trigger>
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger asChild>
+        <button className="btn btn-ghost" type="button" aria-label="搜索曲库" title="搜索曲库">
+          搜索
+        </button>
+      </Dialog.Trigger>
 
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/55 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 w-[760px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/15 bg-slate-900/95 p-5 shadow-2xl">
-            <Dialog.Title className="text-base font-medium text-slate-100">在线搜索</Dialog.Title>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/55 backdrop-blur-sm" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 w-[760px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/15 bg-slate-900/95 p-5 shadow-2xl">
+          <Dialog.Title className="text-base font-medium text-slate-100">搜索曲库</Dialog.Title>
 
-            <div className="mt-4 flex flex-col gap-3">
-              <label className="text-sm">
-                <div className="mb-1 text-slate-400">搜索关键词</div>
-                <input
-                  className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 outline-none ring-emerald-400/50 placeholder:text-slate-500 focus:ring-2"
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  placeholder="例如：告白气球"
-                />
-              </label>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="text-sm flex items-center gap-2">
-                  <span className="text-slate-400">来源</span>
-                  <select
-                    className="rounded-lg border border-white/15 bg-white/[0.04] px-2 py-1 text-sm text-slate-200"
-                    value={provider}
-                    onChange={(e) => setProvider(e.target.value as ProviderValue)}
-                  >
-                    {providerOptions.map((p) => (
-                      <option key={p.value} value={p.value}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <button
-                  className="btn btn-secondary"
-                  type="button"
-                  onClick={() => setApiConfigOpen(true)}
-                >
-                  接口配置
-                </button>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <button
-                  className="btn btn-primary"
-                  type="button"
-                  onClick={() => void onSearch()}
-                  disabled={isLoading || !keyword.trim()}
-                >
-                  {isLoading ? '搜索中...' : '搜索'}
-                </button>
-              </div>
-
-              {errorText ? <div className="text-sm text-red-300">{errorText}</div> : null}
-
-              <SearchResults
-                results={results}
-                isLoading={isLoading}
-                errorText={null}
-                onSelectSong={(s) => void onSelectSong(s)}
+          <div className="mt-4 flex flex-col gap-3">
+            <label className="text-sm">
+              <div className="mb-1 text-slate-400">搜索关键词</div>
+              <input
+                className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 outline-none ring-emerald-400/50 placeholder:text-slate-500 focus:ring-2"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void onSearch()
+                }}
+                placeholder="搜索歌名 / 歌手 / 专辑"
+                autoFocus
               />
+            </label>
+
+            <div className="flex justify-end gap-2">
+              <button
+                className="btn btn-primary"
+                type="button"
+                onClick={() => void onSearch()}
+                disabled={isLoading || !keyword.trim()}
+              >
+                {isLoading ? '搜索中...' : '搜索'}
+              </button>
             </div>
 
-            <div className="mt-4 flex justify-end">
-              <Dialog.Close asChild>
-                <button className="btn btn-secondary" type="button">
-                  关闭
-                </button>
-              </Dialog.Close>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+            {errorText ? <div className="text-sm text-red-300">{errorText}</div> : null}
 
-      <ApiConfigModal open={apiConfigOpen} onOpenChange={setApiConfigOpen} />
-    </>
+            <SearchResults
+              results={results}
+              isLoading={isLoading}
+              errorText={null}
+              onSelectSong={(s) => void onSelectSong(s)}
+            />
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <Dialog.Close asChild>
+              <button className="btn btn-secondary" type="button">
+                关闭
+              </button>
+            </Dialog.Close>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   )
 }

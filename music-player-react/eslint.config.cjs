@@ -30,6 +30,8 @@ module.exports = [
       'react-hooks/exhaustive-deps': 'warn',
       // Prevent duplicate reporting between ESLint core and TS rules.
       'no-unused-vars': 'off',
+      // TS 的 lib 类型（如 RequestInit）不由 ESLint no-undef 判定，交由 tsc 检查。
+      'no-undef': 'off',
     },
   },
 ]

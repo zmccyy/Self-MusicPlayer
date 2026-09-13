@@ -2,13 +2,14 @@ import { create } from 'zustand'
 import type { Playlist } from '../types/playlist'
 import type { Song } from '../types/song'
 import {
-  addSongToPlaylist as addSongToPlaylistFromDB,
-  deletePlaylist as deletePlaylistFromDB,
-  getAllPlaylists,
-  getAllSongs,
-  removeSongFromPlaylist as removeSongFromPlaylistFromDB,
-  upsertPlaylist as upsertPlaylistFromDB,
-} from '../services/storageService'
+  addTracksToPlaylist,
+  createPlaylist as createPlaylistApi,
+  deletePlaylist as deletePlaylistApi,
+  fetchPlaylists,
+  fetchTracks,
+  removeTrackFromPlaylist,
+  updatePlaylist as updatePlaylistApi,
+} from '../api/client'
 
 type PlaylistId = string | 'all'
 
@@ -44,7 +45,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => {
     loadAll: async () => {
       set({ isLoading: true })
       try {
-        const [songs, playlists] = await Promise.all([getAllSongs(), getAllPlaylists()])
+        const [songs, playlists] = await Promise.all([fetchTracks(), fetchPlaylists()])
         set({ songs, playlists })
       } finally {
         set({ isLoading: false })
@@ -57,43 +58,31 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => {
     },
 
     createPlaylist: async (name, category) => {
-      const playlist: Playlist = {
-        id: Date.now().toString(),
-        name,
-        category: category || '',
-        songs: [],
-      }
-      await upsertPlaylistFromDB(playlist)
+      const playlist = await createPlaylistApi(name, category || '')
       set({ playlists: [...get().playlists, playlist] })
       return playlist
     },
 
     updatePlaylist: async (id, data) => {
-      const state = get()
-      const existing = state.playlists.find((p) => p.id === id)
-      if (!existing) return
-      const next: Playlist = {
-        ...existing,
-        ...data,
-        updatedAt: Date.now(),
-      }
-      await upsertPlaylistFromDB(next)
+      const playlist = await updatePlaylistApi(id, {
+        name: data.name,
+        description: data.category,
+      })
       set({
-        playlists: state.playlists.map((p) => (p.id === id ? next : p)),
+        playlists: get().playlists.map((p) => (p.id === id ? playlist : p)),
       })
     },
 
     deletePlaylist: async (id) => {
-      const state = get()
-      await deletePlaylistFromDB(id)
-      const nextPlaylists = state.playlists.filter((p) => p.id !== id)
-      const nextCurrent = state.currentPlaylistId === id ? 'all' : state.currentPlaylistId
+      await deletePlaylistApi(id)
+      const nextPlaylists = get().playlists.filter((p) => p.id !== id)
+      const nextCurrent = get().currentPlaylistId === id ? 'all' : get().currentPlaylistId
       set({ playlists: nextPlaylists, currentPlaylistId: nextCurrent })
       localStorage.setItem('playlistId', nextCurrent)
     },
 
     addSongToPlaylist: async (playlistId, songId) => {
-      await addSongToPlaylistFromDB(playlistId, songId)
+      await addTracksToPlaylist(playlistId, [songId])
       set({
         playlists: get().playlists.map((p) => {
           if (p.id !== playlistId) return p
@@ -104,7 +93,7 @@ export const usePlaylistStore = create<PlaylistState>((set, get) => {
     },
 
     removeSongFromPlaylist: async (playlistId, songId) => {
-      await removeSongFromPlaylistFromDB(playlistId, songId)
+      await removeTrackFromPlaylist(playlistId, songId)
       set({
         playlists: get().playlists.map((p) => {
           if (p.id !== playlistId) return p

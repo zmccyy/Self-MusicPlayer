@@ -86,9 +86,10 @@ export function SearchBox() {
         artists: song.artists,
         durationSec: song.duration,
       })
-      await loadAll()
-      // 队列中的临时在线曲目替换为正式曲目
+      // 先把队列里的临时在线曲目替换为正式曲目（保持播放不中断），
+      // 再刷新曲库 —— 顺序很重要，否则曲库刷新会把临时歌曲挤出队列。
       usePlayerStore.getState().replaceSong(neteaseTempSongId(song.id), saved)
+      await loadAll()
       setOnlineResults((prev) => prev.filter((s) => s.id !== song.id))
     } catch (e) {
       setErrorText(e instanceof Error ? e.message : '收藏失败')

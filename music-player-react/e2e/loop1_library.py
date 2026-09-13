@@ -80,11 +80,12 @@ def main():
         assert 'SERVER_OK' in out.stdout, f'server state wrong: {out.stdout} {out.stderr}'
         print('PASS [edit]: metadata updated in UI and on server')
 
-        # 3. Delete via UI (accept the confirm dialog)
-        page.on('dialog', lambda d: d.accept())
+        # 3. Delete via UI (ConfirmDialog replaces the native confirm)
         row = page.locator('.song-row', has_text='Renamed Song').first
         row.hover()
         row.get_by_title('从曲库删除').click()
+        page.wait_for_timeout(500)
+        page.locator('[role="alertdialog"]').get_by_role('button', name='删除', exact=True).click()
         page.wait_for_timeout(800)
         assert page.locator('.song-row', has_text='Renamed Song').count() == 0, 'song still visible after delete'
         out = subprocess.run(

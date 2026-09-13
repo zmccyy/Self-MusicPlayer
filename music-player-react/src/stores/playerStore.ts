@@ -24,6 +24,7 @@ type PlayerState = {
   setPlaylist: (songs: Song[]) => void
   enqueueAndPlay: (song: Song) => void
   replaceSong: (tempId: string, realSong: Song) => void
+  reorderQueue: (songs: Song[]) => void
   play: (index: number) => void
   pause: () => void
   togglePlay: () => void
@@ -136,6 +137,15 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         playlist: nextPlaylist,
         currentSong: state.currentSong?.id === tempId ? realSong : state.currentSong,
       })
+    },
+
+    /** Now Playing 队列拖拽排序：本地重排队列，不重触发播放。 */
+    reorderQueue: (songs) => {
+      const state = get()
+      const nextIndex = state.currentSong
+        ? songs.findIndex((s) => s.id === state.currentSong?.id)
+        : -1
+      set({ playlist: songs, currentIndex: nextIndex })
     },
 
     play: (index) => {

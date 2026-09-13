@@ -149,7 +149,9 @@ def main():
         item = page.locator('.playlist-item', has_text=f'{pl_name} 改名')
         item.hover()
         item.get_by_title('删除歌单').click()
-        page.wait_for_timeout(600)
+        page.wait_for_timeout(500)
+        page.locator('[role="alertdialog"]').get_by_role('button', name='删除歌单', exact=True).click()
+        page.wait_for_timeout(800)
         assert page.locator('.playlist-item', has_text=f'{pl_name} 改名').count() == 0, 'delete failed'
         print('PASS [rename+delete]: playlist renamed and deleted')
 

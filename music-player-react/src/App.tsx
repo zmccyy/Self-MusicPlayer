@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { motion } from 'motion/react'
+import { Toaster, toast } from 'sonner'
+import { FolderSearch, Moon, Sun, Upload } from 'lucide-react'
 import { PlayerBar } from './components/player/PlayerBar'
 import { PlaylistSidebar } from './components/playlist/PlaylistSidebar'
 import { SongList } from './components/playlist/SongList'
@@ -13,6 +16,8 @@ import { useTheme } from './hooks/useTheme'
 import { usePlayerStore } from './stores/playerStore'
 import { usePlaylistStore } from './stores/playlistStore'
 import { SearchBox } from './components/search/SearchBox'
+import { Button } from './components/ui'
+import { SongListSkeleton } from './components/ui/Skeleton'
 
 export default function App() {
   useServiceWorker()
@@ -25,6 +30,7 @@ export default function App() {
   const songs = usePlaylistStore((s) => s.songs)
   const playlists = usePlaylistStore((s) => s.playlists)
   const currentPlaylistId = usePlaylistStore((s) => s.currentPlaylistId)
+  const isLoading = usePlaylistStore((s) => s.isLoading)
 
   const setPlayerPlaylist = usePlayerStore((s) => s.setPlaylist)
 
@@ -37,6 +43,11 @@ export default function App() {
   useEffect(() => {
     void loadAllPlaylists()
   }, [loadAllPlaylists])
+
+  // 上传/接口错误统一走 toast（替代内嵌错误横幅）
+  useEffect(() => {
+    if (error) toast.error(error)
+  }, [error])
 
   const visibleSongs = useMemo(() => {
     if (currentPlaylistId === 'all') return songs
@@ -72,13 +83,32 @@ export default function App() {
         if (files && files.length) void uploadFiles(files)
       }}
     >
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-20 top-0 h-72 w-72 rounded-full bg-emerald-500/18 blur-3xl" />
-        <div className="absolute right-0 top-16 h-72 w-72 rounded-full bg-cyan-500/14 blur-3xl" />
+      {/* 背景光斑：缓慢漂移的动效背景 */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <motion.div
+          className="absolute -left-20 top-0 h-72 w-72 rounded-full bg-emerald-500/18 blur-3xl"
+          animate={{ x: [0, 40, 0], y: [0, 24, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute right-0 top-16 h-72 w-72 rounded-full bg-cyan-500/14 blur-3xl"
+          animate={{ x: [0, -36, 0], y: [0, 30, 0] }}
+          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute bottom-32 left-1/3 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl"
+          animate={{ x: [0, 30, 0], y: [0, -26, 0] }}
+          transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
+        />
       </div>
 
       <header className="relative mx-auto mt-8 w-full max-w-6xl px-4">
-        <div className="rounded-3xl border border-border-soft bg-surface p-6 backdrop-blur-xl">
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+          className="rounded-3xl border border-border-soft bg-surface p-6 backdrop-blur-xl"
+        >
           <div className="flex flex-wrap items-start gap-4">
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-[0.2em] text-text-secondary">Music Hub</p>
@@ -91,33 +121,39 @@ export default function App() {
             </div>
 
             <div className="ml-auto flex flex-wrap items-center gap-3">
-              <button
-                className="btn btn-primary"
-                type="button"
+              <Button
+                variant="primary"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
               >
+                <Upload className="h-4 w-4" />
                 {isUploading ? '上传中...' : '上传音乐'}
-              </button>
-              <button
-                className="btn btn-secondary"
-                type="button"
-                onClick={() => setIsScanOpen(true)}
-              >
+              </Button>
+              <Button variant="secondary" onClick={() => setIsScanOpen(true)}>
+                <FolderSearch className="h-4 w-4" />
                 扫描导入
-              </button>
+              </Button>
               <SearchBox />
 
-              <button
-                className="btn btn-secondary"
-                type="button"
+              <Button
+                variant="secondary"
+                size="icon"
                 onClick={toggleTheme}
                 disabled={isUploading}
                 aria-label="切换主题"
                 data-theme-toggle
+                title={`切换到${theme === 'dark' ? '浅色' : '深色'}`}
               >
-                切换到{theme === 'dark' ? '浅色' : '深色'}
-              </button>
+                <motion.span
+                  key={theme}
+                  initial={{ rotate: -90, opacity: 0, scale: 0.6 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex"
+                >
+                  {theme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                </motion.span>
+              </Button>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -133,27 +169,29 @@ export default function App() {
               />
             </div>
           </div>
-        </div>
+        </motion.div>
       </header>
 
       <div className="relative mx-auto mt-6 flex w-full max-w-6xl gap-4 px-4">
         <PlaylistSidebar onCreateClick={() => setIsPlaylistModalOpen(true)} />
         <main className="flex-1 rounded-3xl border border-border-soft bg-surface backdrop-blur-xl">
-          <SongList />
-          <LyricPanel />
+          {isLoading && songs.length === 0 ? (
+            <SongListSkeleton rows={7} />
+          ) : (
+            <>
+              <SongList />
+              <LyricPanel />
+            </>
+          )}
         </main>
       </div>
 
       <PlaylistModal open={isPlaylistModalOpen} onOpenChange={setIsPlaylistModalOpen} />
       <ScanDialog open={isScanOpen} onOpenChange={setIsScanOpen} />
 
-      {error ? (
-        <div className="mx-auto mt-4 max-w-6xl rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
-          {error}
-        </div>
-      ) : null}
-
       <PlayerBar />
+
+      <Toaster position="top-center" theme={theme} richColors closeButton />
     </div>
   )
 }

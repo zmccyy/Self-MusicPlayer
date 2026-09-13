@@ -83,8 +83,9 @@ def main():
         assert candidates.count() > 0, 'no candidates found from NetEase search'
         candidates.first.click()
         page.wait_for_timeout(2500)
-        body = page.locator('[role="dialog"]').inner_text()
-        assert '已保存' in body, f'save confirmation missing: {body[:300]}'
+        # success feedback now comes as a sonner toast
+        page.wait_for_selector('[data-sonner-toast]', timeout=5000)
+        assert '已绑定' in page.inner_text('[data-sonner-toast]'), 'save toast missing'
         print('PASS [match]: lyric fetched from NetEase and saved')
 
         # Close and verify the lyric panel renders lines now

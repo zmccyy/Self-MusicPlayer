@@ -1,4 +1,5 @@
 import { usePlayerStore } from '../../stores/playerStore'
+import { Slider } from '../ui'
 
 export function ProgressBar() {
   const currentTime = usePlayerStore((s) => s.currentTime)
@@ -15,17 +16,16 @@ export function ProgressBar() {
   }
 
   return (
-    <div className="flex min-w-[220px] items-center gap-3 rounded-xl border border-border-soft bg-surface px-3 py-2">
+    <div className="flex min-w-[220px] flex-1 items-center gap-3">
       <span className="text-xs tabular-nums text-text-secondary">{timeText(currentTime)}</span>
 
-      <input
-        className="w-full accent-emerald-400"
-        type="range"
+      <Slider
+        className="flex-1"
         min={0}
         max={max}
         step={0.01}
-        value={Math.min(currentTime, max)}
-        onChange={(e) => seek(Number(e.target.value))}
+        value={[Math.min(currentTime, max)]}
+        onValueChange={([v]) => seek(v ?? 0)}
         aria-label="进度条"
       />
 

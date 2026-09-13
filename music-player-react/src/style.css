@@ -50,6 +50,47 @@
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
   --color-text-on-accent: var(--text-on-accent);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+}
+
+/* ---------- 滚动条 ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-hover) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-hover);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------- 播放中指示条（歌单/队列行的均衡器动画） ---------- */
+@keyframes eq-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+.eq-bar {
+  transform-origin: bottom;
+  animation: eq-bar 1s ease-in-out infinite;
+}
+
+/* ---------- 封面播放光晕 ---------- */
+@keyframes cover-glow {
+  0%, 100% { box-shadow: 0 0 24px 0 rgba(16, 185, 129, 0.25); }
+  50% { box-shadow: 0 0 48px 8px rgba(16, 185, 129, 0.45); }
+}
+.cover-playing {
+  animation: cover-glow 2.4s ease-in-out infinite;
 }
 
 * {

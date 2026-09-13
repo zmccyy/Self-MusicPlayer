@@ -79,11 +79,8 @@ export function EqualizerPanel() {
   }
 
   return (
-    <div className="w-full rounded-2xl border border-border-strong bg-surface p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-text-secondary">
-          音效均衡器
-        </div>
+    <div className="w-full rounded-2xl border border-border-soft bg-surface p-4">
+      <div className="flex items-center justify-end gap-3">
         <label className="flex items-center gap-2 text-sm text-text-secondary">
           <input
             type="checkbox"
@@ -97,7 +94,8 @@ export function EqualizerPanel() {
       <div className="mt-4 flex flex-col gap-4">
         <PresetSelector value={presetValue} onChange={onPresetChange} />
 
-        <div className="grid gap-3">
+        {/* 10 段竖向滑条，一屏放下 */}
+        <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
           {EQ_BAND_FREQUENCIES_HZ.map((freqHz, idx) => (
             <FrequencyBand
               key={freqHz}

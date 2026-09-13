@@ -43,7 +43,7 @@ def main():
         page.get_by_role('button', name='收起').click()
         page.locator('button[aria-label="打开均衡器"]').click()
         page.wait_for_timeout(600)
-        sliders = page.locator('[role="dialog"] input[type="range"]')
+        sliders = page.locator('[role="dialog"] [role="slider"]')
         assert sliders.count() == 10, f'expected 10 EQ bands, got {sliders.count()}'
         preset_names = ' '.join(
             page.locator('[role="dialog"] select option').all_inner_texts()

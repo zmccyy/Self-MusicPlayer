@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
+import { Modal, Textarea, Button } from '../ui'
 
 type Props = {
   open: boolean
@@ -28,40 +28,28 @@ export function LyricEditor({ open, onOpenChange, initialText, onSave }: Props) 
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/55 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-[520px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border-strong bg-elevated p-4 shadow-2xl">
-          <Dialog.Title className="text-base font-medium text-text-primary">
-            编辑歌词（LRC）
-          </Dialog.Title>
-
-          <div className="mt-3">
-            <textarea
-              className="h-72 w-full resize-none rounded-xl border border-border-strong bg-surface p-3 font-mono text-xs text-text-primary outline-none ring-emerald-400/50 placeholder:text-text-muted focus:ring-2"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
-            <div className="mt-2 text-xs text-text-secondary">每行格式：`[分:秒] 歌词内容`</div>
-          </div>
-
-          <div className="mt-4 flex justify-end gap-2">
-            <Dialog.Close asChild>
-              <button className="btn btn-ghost" type="button">
-                取消
-              </button>
-            </Dialog.Close>
-            <button
-              className="btn btn-primary"
-              type="button"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              {isSaving ? '保存中...' : '保存'}
-            </button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="编辑歌词（LRC）"
+      width="w-[560px]"
+      footer={
+        <>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            取消
+          </Button>
+          <Button variant="primary" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? '保存中...' : '保存'}
+          </Button>
+        </>
+      }
+    >
+      <Textarea
+        className="h-72 resize-none font-mono text-xs"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <div className="mt-2 text-xs text-text-secondary">每行格式：`[分:秒] 歌词内容`</div>
+    </Modal>
   )
 }

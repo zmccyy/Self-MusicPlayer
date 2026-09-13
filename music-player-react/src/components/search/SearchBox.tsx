@@ -1,5 +1,8 @@
 import { useState } from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
+import { Search } from 'lucide-react'
+import { motion } from 'motion/react'
+import { toast } from 'sonner'
+import { Modal, Input, Button, Badge } from '../ui'
 import {
   fetchTracks,
   neteaseStreamUrl,
@@ -91,6 +94,7 @@ export function SearchBox() {
       usePlayerStore.getState().replaceSong(neteaseTempSongId(song.id), saved)
       await loadAll()
       setOnlineResults((prev) => prev.filter((s) => s.id !== song.id))
+      toast.success(`《${saved.name}》已收藏入曲库`)
     } catch (e) {
       setErrorText(e instanceof Error ? e.message : '收藏失败')
     } finally {
@@ -133,126 +137,112 @@ export function SearchBox() {
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
-        <button className="btn btn-ghost" type="button" aria-label="搜索" title="搜索">
-          搜索
-        </button>
-      </Dialog.Trigger>
+    <>
+      <Button variant="ghost" aria-label="搜索" title="搜索" onClick={() => setOpen(true)}>
+        <Search className="h-4 w-4" />
+        搜索
+      </Button>
 
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/55 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-[760px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border-strong bg-elevated p-5 shadow-2xl">
-          <Dialog.Title className="text-base font-medium text-text-primary">搜索</Dialog.Title>
+      <Modal open={open} onOpenChange={setOpen} title="搜索" width="w-[720px]" showClose={false}>
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-1 rounded-xl border border-border-soft bg-surface p-1">
+            {(
+              [
+                ['library', '曲库'],
+                ['online', '在线（NetEase）'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                className={
+                  mode === value
+                    ? 'flex-1 rounded-lg bg-emerald-500/20 px-3 py-1.5 text-sm text-emerald-500'
+                    : 'flex-1 rounded-lg px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary'
+                }
+                onClick={() => switchMode(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-          <div className="mt-4 flex flex-col gap-3">
-            <div className="flex gap-1 rounded-xl border border-border-soft bg-surface p-1">
-              {(
-                [
-                  ['library', '曲库'],
-                  ['online', '在线（NetEase）'],
-                ] as const
-              ).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={
-                    mode === value
-                      ? 'flex-1 rounded-lg bg-emerald-500/20 px-3 py-1.5 text-sm text-emerald-500'
-                      : 'flex-1 rounded-lg px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary'
-                  }
-                  onClick={() => switchMode(value)}
+          <div className="flex gap-2">
+            <Input
+              className="flex-1"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void onSearch()
+              }}
+              placeholder={mode === 'library' ? '搜索歌名 / 歌手 / 专辑' : '例如：周杰伦 晴天'}
+              autoFocus
+            />
+            <Button
+              variant="primary"
+              onClick={() => void onSearch()}
+              disabled={isLoading || !keyword.trim()}
+            >
+              {isLoading ? '搜索中...' : '搜索'}
+            </Button>
+          </div>
+
+          {errorText ? <div className="text-sm text-red-400">{errorText}</div> : null}
+
+          {mode === 'library' ? (
+            <SearchResults
+              results={results}
+              isLoading={isLoading}
+              errorText={null}
+              onSelectSong={(s) => void playFromLibrary(s)}
+            />
+          ) : (
+            <div className="max-h-80 overflow-y-auto pr-1">
+              {onlineResults.map((song, idx) => (
+                <motion.div
+                  key={song.id}
+                  data-online-row
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.18, delay: Math.min(idx * 0.03, 0.3) }}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-text-primary transition hover:bg-surface-hover"
                 >
-                  {label}
-                </button>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate">{song.name}</span>
+                      {song.fee !== 0 ? <Badge tone="warn">VIP</Badge> : null}
+                    </div>
+                    <div className="truncate text-xs text-text-secondary">
+                      {song.artists}
+                      {song.album ? ` · ${song.album}` : ''}
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-xs text-text-muted">
+                    {formatTime(song.duration || 0)}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={() => playOnline(song)}>
+                    播放
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={savingId === song.id}
+                    onClick={() => void saveOnline(song)}
+                  >
+                    {savingId === song.id ? '下载中...' : '收藏'}
+                  </Button>
+                </motion.div>
               ))}
             </div>
+          )}
+        </div>
 
-            <div className="flex gap-2">
-              <input
-                className="flex-1 rounded-xl border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary outline-none ring-emerald-400/50 placeholder:text-text-muted focus:ring-2"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') void onSearch()
-                }}
-                placeholder={mode === 'library' ? '搜索歌名 / 歌手 / 专辑' : '例如：周杰伦 晴天'}
-                autoFocus
-              />
-              <button
-                className="btn btn-primary"
-                type="button"
-                onClick={() => void onSearch()}
-                disabled={isLoading || !keyword.trim()}
-              >
-                {isLoading ? '搜索中...' : '搜索'}
-              </button>
-            </div>
-
-            {errorText ? <div className="text-sm text-red-300">{errorText}</div> : null}
-
-            {mode === 'library' ? (
-              <SearchResults
-                results={results}
-                isLoading={isLoading}
-                errorText={null}
-                onSelectSong={(s) => void playFromLibrary(s)}
-              />
-            ) : (
-              <div className="max-h-80 overflow-y-auto">
-                {onlineResults.map((song) => (
-                  <div
-                    key={song.id}
-                    data-online-row
-                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-text-primary transition hover:bg-surface-hover"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate">{song.name}</span>
-                        {song.fee !== 0 ? (
-                          <span className="shrink-0 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] text-amber-600">
-                            VIP
-                          </span>
-                        ) : null}
-                      </div>
-                      <div className="truncate text-xs text-text-secondary">
-                        {song.artists}
-                        {song.album ? ` · ${song.album}` : ''}
-                      </div>
-                    </div>
-                    <span className="shrink-0 text-xs text-text-muted">
-                      {formatTime(song.duration || 0)}
-                    </span>
-                    <button
-                      type="button"
-                      className="btn btn-ghost min-h-8 px-3 py-1 text-xs"
-                      onClick={() => playOnline(song)}
-                    >
-                      播放
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary min-h-8 px-3 py-1 text-xs"
-                      disabled={savingId === song.id}
-                      onClick={() => void saveOnline(song)}
-                    >
-                      {savingId === song.id ? '下载中...' : '收藏'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="mt-4 flex justify-end">
-            <Dialog.Close asChild>
-              <button className="btn btn-secondary" type="button">
-                关闭
-              </button>
-            </Dialog.Close>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        <div className="mt-4 flex justify-end">
+          <Button variant="secondary" onClick={() => setOpen(false)}>
+            关闭
+          </Button>
+        </div>
+      </Modal>
+    </>
   )
 }

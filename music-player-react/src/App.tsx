@@ -6,6 +6,7 @@ import { PlaylistModal } from './components/playlist/PlaylistModal'
 import { LyricPanel } from './components/lyric/LyricPanel'
 import { ScanDialog } from './components/library/ScanDialog'
 import { useFileUpload } from './hooks/useFileUpload'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useMediaSession } from './hooks/useMediaSession'
 import { useServiceWorker } from './hooks/useServiceWorker'
 import { useTheme } from './hooks/useTheme'
@@ -16,6 +17,7 @@ import { SearchBox } from './components/search/SearchBox'
 export default function App() {
   useServiceWorker()
   useMediaSession()
+  useKeyboardShortcuts()
 
   const { theme, toggleTheme } = useTheme()
 

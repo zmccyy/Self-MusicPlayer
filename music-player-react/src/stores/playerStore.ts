@@ -183,12 +183,28 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
       let nextIndex: number
       if (state.playMode === 'shuffle') {
-        nextIndex = Math.floor(Math.random() * state.playlist.length)
+        // 随机但避免连播同一首（列表只有一首时只能重复）
+        if (state.playlist.length === 1) {
+          nextIndex = state.currentIndex
+        } else {
+          do {
+            nextIndex = Math.floor(Math.random() * state.playlist.length)
+          } while (nextIndex === state.currentIndex)
+        }
       } else if (state.playMode === 'single') {
         nextIndex = state.currentIndex
       } else {
         nextIndex = state.currentIndex + 1
-        if (nextIndex >= state.playlist.length) nextIndex = 0
+        if (nextIndex >= state.playlist.length) {
+          if (state.playMode === 'order') {
+            // 顺序播放：整张列表播完即停止
+            audioService.pause()
+            set({ isPlaying: false, currentTime: 0 })
+            return
+          }
+          // repeat：列表循环
+          nextIndex = 0
+        }
       }
 
       get().play(nextIndex)

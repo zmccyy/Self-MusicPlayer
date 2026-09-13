@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { PlayerControls } from './PlayerControls'
 import { ProgressBar } from './ProgressBar'
 import { VolumeControl } from './VolumeControl'
+import { NowPlaying } from './NowPlaying'
 import { usePlayerStore } from '../../stores/playerStore'
 import { EqualizerPanel } from '../equalizer/EqualizerPanel'
 import { ShareButton } from '../share/ShareButton'
@@ -11,6 +12,7 @@ export function PlayerBar() {
   const currentSong = usePlayerStore((s) => s.currentSong)
   const isPlaying = usePlayerStore((s) => s.isPlaying)
   const [eqOpen, setEqOpen] = useState(false)
+  const [nowPlayingOpen, setNowPlayingOpen] = useState(false)
 
   return (
     <div
@@ -19,7 +21,13 @@ export function PlayerBar() {
     >
       <div className="mx-auto max-w-6xl rounded-2xl border border-white/10 bg-white/[0.04] p-4">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10">
+          <button
+            type="button"
+            className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-white/10 transition hover:ring-2 hover:ring-emerald-400/50"
+            onClick={() => setNowPlayingOpen(true)}
+            title="展开播放面板"
+            aria-label="展开播放面板"
+          >
             {currentSong?.cover ? (
               // cover 可能是 dataURL/objectURL，这里直接展示
               <img
@@ -40,7 +48,7 @@ export function PlayerBar() {
                 <polyline points="21 15 16 10 5 21" />
               </svg>
             )}
-          </div>
+          </button>
 
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm text-slate-400">
@@ -95,6 +103,8 @@ export function PlayerBar() {
           </div>
         </div>
       </div>
+
+      <NowPlaying open={nowPlayingOpen} onOpenChange={setNowPlayingOpen} />
     </div>
   )
 }

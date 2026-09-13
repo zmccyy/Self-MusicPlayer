@@ -79,12 +79,12 @@ export function EqualizerPanel() {
   }
 
   return (
-    <div className="w-full rounded-2xl border border-white/15 bg-white/[0.04] p-4">
+    <div className="w-full rounded-2xl border border-border-strong bg-surface p-4">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-text-secondary">
           音效均衡器
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
+        <label className="flex items-center gap-2 text-sm text-text-secondary">
           <input
             type="checkbox"
             checked={enabled}

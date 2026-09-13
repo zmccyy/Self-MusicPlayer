@@ -60,26 +60,26 @@ export function SongList() {
   }
 
   const actionBtn =
-    'rounded-lg px-2 py-1 text-xs text-slate-400 hover:bg-white/10 hover:text-white'
+    'rounded-lg px-2 py-1 text-xs text-text-secondary hover:bg-surface-hover hover:text-text-primary'
 
   return (
     <div className="p-4">
       <div className="mb-3 flex items-center justify-between">
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-text-secondary">
           歌曲列表
         </div>
         {inPlaylistView ? (
-          <div className="text-xs text-slate-500">拖动歌曲行可调整歌单顺序</div>
+          <div className="text-xs text-text-muted">拖动歌曲行可调整歌单顺序</div>
         ) : null}
       </div>
 
       {songs.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-center text-sm text-slate-400">
+        <div className="rounded-2xl border border-border-soft bg-surface p-6 text-center text-sm text-text-secondary">
           暂无音乐
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]">
-          <div className="grid grid-cols-[48px_1fr_120px_110px] gap-2 border-b border-white/10 bg-white/[0.03] px-3 py-2 text-xs uppercase tracking-wider text-slate-400">
+        <div className="overflow-hidden rounded-2xl border border-border-soft bg-surface">
+          <div className="grid grid-cols-[48px_1fr_120px_110px] gap-2 border-b border-border-soft bg-surface px-3 py-2 text-xs uppercase tracking-wider text-text-secondary">
             <div>#</div>
             <div>标题</div>
             <div className="text-right">时长</div>
@@ -92,7 +92,7 @@ export function SongList() {
               return (
                 <div
                   key={song.id}
-                  className="song-row group grid w-full grid-cols-[48px_1fr_120px_110px] gap-2 border-t border-white/10 px-3 py-2 text-left transition hover:bg-white/[0.06]"
+                  className="song-row group grid w-full grid-cols-[48px_1fr_120px_110px] gap-2 border-t border-border-soft px-3 py-2 text-left transition hover:bg-surface-hover"
                   data-active={isActive ? 'true' : 'false'}
                   draggable={inPlaylistView}
                   onDragStart={() => {
@@ -108,19 +108,19 @@ export function SongList() {
                   <button
                     type="button"
                     onClick={() => play(idx)}
-                    className="flex items-center text-xs text-slate-400"
+                    className="flex items-center text-xs text-text-secondary"
                     title="播放"
                   >
                     {idx + 1}
                   </button>
                   <button type="button" onClick={() => play(idx)} className="min-w-0 text-left">
-                    <div className="truncate text-sm text-slate-100">{song.name}</div>
-                    <div className="truncate text-xs text-slate-400">{song.artist}</div>
+                    <div className="truncate text-sm text-text-primary">{song.name}</div>
+                    <div className="truncate text-xs text-text-secondary">{song.artist}</div>
                   </button>
                   <button
                     type="button"
                     onClick={() => play(idx)}
-                    className="flex items-center justify-end text-xs text-slate-400"
+                    className="flex items-center justify-end text-xs text-text-secondary"
                   >
                     {formatTime(song.duration || 0)}
                   </button>
@@ -149,7 +149,7 @@ export function SongList() {
                     </button>
                     <button
                       type="button"
-                      className="rounded-lg px-2 py-1 text-xs text-slate-400 hover:bg-red-500/20 hover:text-red-300"
+                      className="rounded-lg px-2 py-1 text-xs text-text-secondary hover:bg-red-500/20 hover:text-red-300"
                       onClick={() => onDelete(song)}
                       title="从曲库删除"
                     >

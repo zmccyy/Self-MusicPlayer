@@ -28,7 +28,8 @@ export function createApp(): express.Express {
   // In production, serve the built frontend from the same origin.
   if (fs.existsSync(FRONTEND_DIST_DIR)) {
     app.use(express.static(FRONTEND_DIST_DIR));
-    app.get('*', (req, res, next) => {
+    // SPA fallback: Express 5 does not accept '*' wildcard routes.
+    app.use((req, res, next) => {
       if (req.path.startsWith('/api/')) {
         next();
         return;

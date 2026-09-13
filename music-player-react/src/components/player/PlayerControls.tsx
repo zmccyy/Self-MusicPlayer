@@ -25,7 +25,7 @@ export function PlayerControls() {
   const togglePlayMode = usePlayerStore((s) => s.togglePlayMode)
 
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+    <div className="flex items-center gap-2 rounded-xl border border-border-soft bg-surface p-1">
       <button className="btn btn-secondary" onClick={prev} type="button" aria-label="上一曲">
         上一曲
       </button>

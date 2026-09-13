@@ -7,12 +7,12 @@ type Props = {
 
 export function FrequencyBand({ index, frequencyHz, valueDb, onChange }: Props) {
   return (
-    <label className="flex flex-col gap-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs">
+    <label className="flex flex-col gap-1 rounded-xl border border-border-soft bg-surface px-3 py-2 text-xs">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-slate-400">
+        <span className="text-text-secondary">
           {index + 1}. {frequencyHz >= 1000 ? `${frequencyHz / 1000}kHz` : `${frequencyHz}Hz`}
         </span>
-        <span className="tabular-nums text-slate-200">{valueDb.toFixed(1)} dB</span>
+        <span className="tabular-nums text-text-primary">{valueDb.toFixed(1)} dB</span>
       </div>
       <input
         className="accent-emerald-400"

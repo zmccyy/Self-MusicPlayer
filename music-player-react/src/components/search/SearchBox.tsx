@@ -141,11 +141,11 @@ export function SearchBox() {
 
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/55 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-[760px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/15 bg-slate-900/95 p-5 shadow-2xl">
-          <Dialog.Title className="text-base font-medium text-slate-100">搜索</Dialog.Title>
+        <Dialog.Content className="fixed left-1/2 top-1/2 w-[760px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border-strong bg-elevated p-5 shadow-2xl">
+          <Dialog.Title className="text-base font-medium text-text-primary">搜索</Dialog.Title>
 
           <div className="mt-4 flex flex-col gap-3">
-            <div className="flex gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+            <div className="flex gap-1 rounded-xl border border-border-soft bg-surface p-1">
               {(
                 [
                   ['library', '曲库'],
@@ -157,8 +157,8 @@ export function SearchBox() {
                   type="button"
                   className={
                     mode === value
-                      ? 'flex-1 rounded-lg bg-emerald-500/20 px-3 py-1.5 text-sm text-emerald-300'
-                      : 'flex-1 rounded-lg px-3 py-1.5 text-sm text-slate-400 hover:text-white'
+                      ? 'flex-1 rounded-lg bg-emerald-500/20 px-3 py-1.5 text-sm text-emerald-500'
+                      : 'flex-1 rounded-lg px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary'
                   }
                   onClick={() => switchMode(value)}
                 >
@@ -169,7 +169,7 @@ export function SearchBox() {
 
             <div className="flex gap-2">
               <input
-                className="flex-1 rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 outline-none ring-emerald-400/50 placeholder:text-slate-500 focus:ring-2"
+                className="flex-1 rounded-xl border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary outline-none ring-emerald-400/50 placeholder:text-text-muted focus:ring-2"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 onKeyDown={(e) => {
@@ -203,23 +203,23 @@ export function SearchBox() {
                   <div
                     key={song.id}
                     data-online-row
-                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-slate-200 transition hover:bg-white/[0.06]"
+                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-text-primary transition hover:bg-surface-hover"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="truncate">{song.name}</span>
                         {song.fee !== 0 ? (
-                          <span className="shrink-0 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] text-amber-300">
+                          <span className="shrink-0 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] text-amber-600">
                             VIP
                           </span>
                         ) : null}
                       </div>
-                      <div className="truncate text-xs text-slate-400">
+                      <div className="truncate text-xs text-text-secondary">
                         {song.artists}
                         {song.album ? ` · ${song.album}` : ''}
                       </div>
                     </div>
-                    <span className="shrink-0 text-xs text-slate-500">
+                    <span className="shrink-0 text-xs text-text-muted">
                       {formatTime(song.duration || 0)}
                     </span>
                     <button

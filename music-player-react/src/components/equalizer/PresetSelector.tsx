@@ -11,9 +11,9 @@ type Props = {
 export function PresetSelector({ value, onChange }: Props) {
   return (
     <label className="flex items-center justify-between gap-3 text-sm">
-      <span className="text-slate-400">预设</span>
+      <span className="text-text-secondary">预设</span>
       <select
-        className="rounded-lg border border-white/15 bg-white/[0.04] px-2 py-1 text-sm text-slate-200"
+        className="rounded-lg border border-border-strong bg-surface px-2 py-1 text-sm text-text-primary"
         value={value}
         onChange={(e) => onChange(e.target.value as PresetValue)}
         aria-label="选择均衡器预设"

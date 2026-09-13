@@ -15,8 +15,8 @@ export function ProgressBar() {
   }
 
   return (
-    <div className="flex min-w-[220px] items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-      <span className="text-xs tabular-nums text-slate-400">{timeText(currentTime)}</span>
+    <div className="flex min-w-[220px] items-center gap-3 rounded-xl border border-border-soft bg-surface px-3 py-2">
+      <span className="text-xs tabular-nums text-text-secondary">{timeText(currentTime)}</span>
 
       <input
         className="w-full accent-emerald-400"
@@ -29,7 +29,7 @@ export function ProgressBar() {
         aria-label="进度条"
       />
 
-      <span className="text-xs tabular-nums text-slate-400">{timeText(duration)}</span>
+      <span className="text-xs tabular-nums text-text-secondary">{timeText(duration)}</span>
     </div>
   )
 }

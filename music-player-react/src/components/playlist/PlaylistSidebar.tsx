@@ -37,9 +37,9 @@ export function PlaylistSidebar({ onCreateClick }: Props) {
   }
 
   return (
-    <aside className="w-72 shrink-0 rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl">
+    <aside className="w-72 shrink-0 rounded-3xl border border-border-soft bg-surface backdrop-blur-xl">
       <div className="p-4">
-        <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <div className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-text-secondary">
           我的歌单
         </div>
 
@@ -51,7 +51,7 @@ export function PlaylistSidebar({ onCreateClick }: Props) {
           {items.map((item) => (
             <div
               key={item.id}
-              className="playlist-item group relative flex items-center rounded-xl px-3 py-2 text-left text-sm text-slate-200 transition hover:bg-white/10"
+              className="playlist-item group relative flex items-center rounded-xl px-3 py-2 text-left text-sm text-text-primary transition hover:bg-surface-hover"
               data-active={currentPlaylistId === item.id ? 'true' : 'false'}
             >
               <button
@@ -63,15 +63,15 @@ export function PlaylistSidebar({ onCreateClick }: Props) {
                 {item.name}
               </button>
               {item.count >= 0 ? (
-                <span className="ml-2 shrink-0 text-xs text-slate-500 transition group-hover:opacity-0">
+                <span className="ml-2 shrink-0 text-xs text-text-muted transition group-hover:opacity-0">
                   {item.count}
                 </span>
               ) : null}
               {item.id !== 'all' ? (
-                <span className="absolute right-2 hidden shrink-0 items-center gap-1 rounded-lg bg-slate-800/95 px-1.5 py-0.5 shadow group-hover:flex">
+                <span className="absolute right-2 hidden shrink-0 items-center gap-1 rounded-lg bg-surface-strong px-1.5 py-0.5 shadow group-hover:flex">
                   <button
                     type="button"
-                    className="rounded px-1 text-xs text-slate-400 hover:text-white"
+                    className="rounded px-1 text-xs text-text-secondary hover:text-text-primary"
                     title="重命名"
                     onClick={() => onRename(item.id, item.name)}
                   >
@@ -79,7 +79,7 @@ export function PlaylistSidebar({ onCreateClick }: Props) {
                   </button>
                   <button
                     type="button"
-                    className="rounded px-1 text-xs text-slate-400 hover:text-red-300"
+                    className="rounded px-1 text-xs text-text-secondary hover:text-red-300"
                     title="删除歌单"
                     onClick={() => onDelete(item.id, item.name)}
                   >

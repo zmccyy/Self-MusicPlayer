@@ -1,157 +1,127 @@
 # Web 端音乐播放器
 
-一款基于 Web 技术的本地音乐播放器，提供简洁现代的界面和完整的播放功能。  
-当前仓库主应用为 React + TypeScript 重构版本，位于 `music-player-react/`。
+一款前后端分离的本地/在线音乐播放器，提供简洁现代的界面与完整的播放能力。
 
-## 功能特性
+- **前端**：React 18 + TypeScript + Vite + Tailwind CSS v4 + Zustand，位于 `music-player-react/`
+- **后端**：Node.js + Express 5 + SQLite（`node:sqlite`）+ music-metadata，位于 `server/`
 
-- **核心播放**：播放/暂停、上一曲/下一曲、进度条拖拽、音量控制
-- **播放模式**：顺序播放、随机播放、单曲循环
-- **歌单管理**：创建、编辑、删除歌单，分类管理
-- **本地文件**：支持 MP3、WAV、OGG、FLAC、AAC 格式，支持批量上传
-- **数据存储**：IndexedDB 本地存储，刷新后数据保留
-- **主题切换**：浅色/深色主题
-- **歌词显示（第一阶段）**：
-  - 支持 LRC 格式解析与同步显示
-  - 歌词上传、嵌入式歌词提取（MP3 ID3）
-  - 歌词编辑器，点击歌词跳转播放
-- **PWA 支持（第一阶段）**：
-  - 可添加到主屏幕，离线访问
-  - Service Worker 缓存，离线播放已缓存音乐
-  - Media Session API，系统通知栏播放控制
-- **第三方 API 集成（第二阶段）**：
-  - 网易云音乐、QQ 音乐在线搜索
-  - 在线播放、添加到本地歌单
-  - 可配置 API 代理地址
-- **社交分享（第三阶段）**：
-  - Web Share API 原生分享
-  - 分享链接生成、复制到剪贴板
-- **音效调节（第三阶段）**：
-  - Web Audio API 10 段均衡器
-  - 预设：流行、摇滚、爵士、古典、电子、重低音、人声
-- **键盘快捷键**：
-  - 空格键：播放/暂停
-  - 左/右方向键：快退/快进 5 秒
-  - 上/下方向键：增加/减少音量
-  - `M` 键：静音/取消静音
-
-## 使用方法
-
-### 1. 启动项目
+## 快速开始
 
 ```bash
-cd music-player-react
+# 1. 启动后端（默认 http://localhost:3799）
+cd server
+npm install
+npm run dev
+
+# 2. 启动前端（默认 http://localhost:5173，/api 自动代理到后端）
+cd ../music-player-react
 npm install
 npm run dev
 ```
 
-然后在浏览器中打开 `http://localhost:5173`。
+生产部署：`cd music-player-react && npm run build` 后由后端直接托管 `dist/`
+（服务端检测到构建产物后自动开启静态托管），只暴露后端一个端口即可。
 
-### 2. 上传音乐
+## 功能特性
 
-1. 点击页面右上角的「上传音乐」按钮
-2. 选择本地音乐文件（支持多选）
-3. 等待上传完成
+### 核心播放
 
-### 3. 创建歌单
+- 播放/暂停、上一曲/下一曲、进度条拖拽、音量控制、静音
+- 播放模式：顺序播放（播完停止）、列表循环、随机播放（避免连播同一首）、单曲循环
+- 服务端音频流支持 HTTP Range，拖动进度即时响应
+- 全屏 Now Playing 面板：大封面 + 同步歌词 + 播放队列两个 Tab
+- 键盘快捷键：`空格` 播放/暂停、`←/→` 快退/快进 5 秒、`↑/↓` 音量增减、`M` 静音
+  （输入框聚焦时不触发）
+- Media Session API：系统媒体通知栏显示歌曲信息与播放控制
 
-1. 点击左侧边栏的「创建歌单」按钮
-2. 输入歌单名称和分类
-3. 保存即可
+### 音乐库（后端管理）
 
-### 4. 歌词功能
+- 上传本地音频（MP3/WAV/OGG/FLAC/AAC/M4A 等），元数据（标题/歌手/专辑/封面/时长）
+  由服务端 music-metadata 解析
+- 扫描文件夹批量导入：递归扫描服务端本机目录，SHA-1 内容哈希自动去重
+- 歌曲信息编辑（标题/歌手/专辑/流派/年份）
+- 歌曲删除（同时清理音频文件、封面与歌词，歌单关联级联移除）
+- 曲库搜索（按标题/歌手/专辑模糊匹配）
+- **数据由后端 SQLite + 文件系统管理，刷新页面后播放不失效**
 
-1. **上传歌词**：选择歌曲播放后，在歌词面板点击上传按钮，选择 `.lrc` 文件
-2. **编辑歌词**：点击编辑按钮，按 LRC 格式编辑（每行 `[分:秒] 歌词内容`）
-3. **嵌入式歌词**：上传的 MP3 若含 ID3 歌词，会自动提取
-4. **点击跳转**：点击某行歌词可跳转到对应播放时间
+### 歌单
 
-### 5. 在线搜索（需配置 API）
+- 服务端歌单 CRUD，支持描述
+- 添加歌曲到歌单 / 从歌单移除
+- 歌单内拖拽排序（顺序持久化到服务端）
+- 歌单重命名与删除
 
-1. 点击「API 配置」设置网易云/QQ 音乐 API 代理地址
-2. 网易云：运行 `npx NeteaseCloudMusicApi`（默认 `http://localhost:3001`）
-3. QQ 音乐：需部署 QQMusicApi 等代理服务（默认 `http://localhost:3300`）
-4. 在搜索框输入关键词搜索，点击播放或「+」添加到本地
+### 歌词
 
-### 6. PWA 安装
+- 支持嵌入式歌词（MP3 USLT）自动提取
+- LRC 文件上传、歌词编辑器（点击歌词行跳转播放）
+- 在线匹配：从网易云音乐搜索候选歌词并一键绑定（支持翻译）
+- 翻译 LRC 按时间轴就近合并，原文下方显示译文
 
-1. 使用 HTTPS 或 localhost 访问应用
-2. 浏览器会显示「添加到主屏幕」或安装提示
-3. 安装后可离线使用，系统通知栏显示播放控制
+### 在线音乐（网易云音乐）
 
-### 7. 分享
+- 在线搜索（服务端代理，无需用户自建 CORS 代理）
+- 在线试听播放（302 流式重定向，支持 Range）
+- 一键收藏下载到本地曲库（VIP 试听片段基于时长校验自动拒绝并提示）
 
-点击播放栏的分享按钮，可分享当前歌曲或应用链接。  
-支持 Web Share API（移动端）或复制到剪贴板。
+### 音效
 
-### 8. 音效调节
+- Web Audio API 10 段均衡器（31Hz–16kHz）
+- 预设：平坦、流行、摇滚、爵士、古典、电子、人声、重低音
+- 均衡器状态本地持久化
 
-点击播放栏的音效按钮打开均衡器面板，可选择预设（流行、摇滚、爵士等）或手动调节各频段，设置会自动保存。
+### 其他
 
-## 开发命令
+- 深色/浅色双主题（CSS 变量驱动，真实切换并持久化）
+- PWA：可安装到主屏幕，Service Worker 缓存（同源音频可离线回放）
+- 全局错误边界，接口错误友好提示
 
-在 `music-player-react/` 目录下执行：
+## 后端 API 概览
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/api/health` | 健康检查（含曲库数量） |
+| GET | `/api/tracks` | 曲库列表，支持 `?query=&sort=&dir=` |
+| POST | `/api/tracks` | multipart 上传音频（字段名 `files`，可批量） |
+| PATCH | `/api/tracks/:id` | 编辑元数据 |
+| DELETE | `/api/tracks/:id` | 删除歌曲及关联文件 |
+| GET | `/api/tracks/:id/stream` | 音频流（Range 支持） |
+| GET | `/api/tracks/:id/cover` | 内嵌封面 |
+| GET/POST | `/api/tracks/:id/lyric` | 读取/保存歌词（含翻译） |
+| GET/POST/PUT/PATCH/DELETE | `/api/playlists...` | 歌单 CRUD、成员增删、排序 |
+| POST | `/api/library/scan` | 扫描目录导入 `{ path }` |
+| GET | `/api/netease/search` | NetEase 搜索代理 |
+| GET | `/api/netease/lyrics/:songId` | NetEase 歌词（含翻译） |
+| GET | `/api/netease/stream/:songId` | 在线试听（302） |
+| POST | `/api/netease/download/:songId` | 下载入库（试听片段自动拒绝） |
+
+数据与音频文件位于 `server/data/`（SQLite + `music/` + `covers/`），已被 gitignore。
+
+## 开发
 
 ```bash
-npm run dev         # 本地开发
-npm run build       # 生产构建
-npm run preview     # 构建结果预览
-npm run lint        # ESLint 检查
-npm run type-check  # TypeScript 类型检查
-npm run test        # Vitest 单元测试
+# 前端
+cd music-player-react
+npm run type-check   # TS 检查（strict）
+npm run lint         # ESLint
+npm test             # Vitest
+
+# 后端
+cd server
+npm run type-check   # TS strict + noUncheckedIndexedAccess
+npm test             # Vitest + supertest（18 个 API 用例）
+
+# 端到端（需前后端均在运行，Python + Playwright）
+cd music-player-react
+python e2e/loop0_play.py        # 最小闭环：列表/播放/刷新持久
+python e2e/loop1_library.py     # 扫描导入/编辑/删除
+python e2e/loop2_playlists.py   # 歌单全流程
+python e2e/loop3_lyrics.py      # 在线歌词匹配（真实网络）
+python e2e/loop4_online.py      # 在线搜索/试听/收藏（真实网络）
+python e2e/loop5_experience.py  # 快捷键/Now Playing
+python e2e/loop6_theme_eq.py    # 主题/均衡器
 ```
 
-## 项目结构
+## License
 
-```text
-music-player/
-├── music-player-react/
-│   ├── public/
-│   │   ├── favicon.svg
-│   │   ├── manifest.json
-│   │   └── sw.js
-│   ├── src/
-│   │   ├── api/                 # 网易云/QQ API 适配
-│   │   ├── app/providers/       # ThemeProvider 等全局 provider
-│   │   ├── components/          # 播放器、歌单、歌词、搜索、均衡器组件
-│   │   ├── constants/           # 常量（均衡器预设等）
-│   │   ├── hooks/               # 上传、MediaSession、PWA、主题等 hooks
-│   │   ├── services/            # audio/storage/lyric/apiGateway 等服务
-│   │   ├── stores/              # Zustand 状态管理
-│   │   ├── test/                # 测试初始化
-│   │   ├── types/               # 领域类型定义
-│   │   ├── utils/               # LRC/ID3/时间格式化等工具
-│   │   ├── App.tsx
-│   │   ├── main.tsx
-│   │   └── style.css
-│   ├── index.html
-│   ├── vite.config.ts
-│   ├── vitest.config.ts
-│   ├── tsconfig.json
-│   └── package.json
-├── REACT_REFACTOR_PLAN.md       # 重构计划
-├── REACT_REFACTOR_EXECUTION_LOG.md
-└── README.md
-```
-
-## 技术栈
-
-- React 18
-- TypeScript
-- Vite
-- Zustand
-- TanStack Query
-- Dexie（IndexedDB）
-- Tailwind CSS
-- Vitest + Testing Library
-
-## 浏览器兼容性
-
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
-
-## 许可证
-
-MIT
+见 [LICENSE](LICENSE)。

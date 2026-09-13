@@ -16,14 +16,14 @@ export function PlayerBar() {
 
   return (
     <div
-      className="player-bar fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 p-4 backdrop-blur-2xl"
+      className="player-bar fixed bottom-0 left-0 right-0 z-50 border-t border-border-soft bg-bg/80 p-4 backdrop-blur-2xl"
       data-playing={isPlaying ? 'true' : 'false'}
     >
-      <div className="mx-auto max-w-6xl rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <div className="mx-auto max-w-6xl rounded-2xl border border-border-soft bg-surface p-4">
         <div className="flex items-center gap-4">
           <button
             type="button"
-            className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-white/10 transition hover:ring-2 hover:ring-emerald-400/50"
+            className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-surface-strong transition hover:ring-2 hover:ring-emerald-400/50"
             onClick={() => setNowPlayingOpen(true)}
             title="展开播放面板"
             aria-label="展开播放面板"
@@ -41,7 +41,7 @@ export function PlayerBar() {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.5"
-                className="h-6 w-6 text-slate-300"
+                className="h-6 w-6 text-text-secondary"
               >
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                 <circle cx="8.5" cy="8.5" r="1.5" />
@@ -51,10 +51,10 @@ export function PlayerBar() {
           </button>
 
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm text-slate-400">
+            <div className="truncate text-sm text-text-secondary">
               {currentSong ? currentSong.artist : '未选择音乐'}
             </div>
-            <div className="truncate text-base font-medium text-slate-100">
+            <div className="truncate text-base font-medium text-text-primary">
               {currentSong ? currentSong.name : '—'}
             </div>
           </div>
@@ -81,8 +81,8 @@ export function PlayerBar() {
               </Dialog.Trigger>
               <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/55 backdrop-blur-sm" />
-                <Dialog.Content className="fixed left-1/2 top-1/2 w-[520px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/15 bg-slate-900/95 p-4 shadow-2xl">
-                  <Dialog.Title className="text-base font-medium text-slate-100">
+                <Dialog.Content className="fixed left-1/2 top-1/2 w-[520px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border-strong bg-elevated p-4 shadow-2xl">
+                  <Dialog.Title className="text-base font-medium text-text-primary">
                     音效均衡器
                   </Dialog.Title>
                   <div className="mt-4">

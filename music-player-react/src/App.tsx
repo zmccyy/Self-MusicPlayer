@@ -62,7 +62,7 @@ export default function App() {
 
   return (
     <div
-      className="relative min-h-screen overflow-x-hidden bg-slate-950 pb-28 text-slate-100"
+      className="relative min-h-screen overflow-x-hidden bg-bg pb-28 text-text-primary"
       onDragOver={(e) => {
         e.preventDefault()
       }}
@@ -78,14 +78,14 @@ export default function App() {
       </div>
 
       <header className="relative mx-auto mt-8 w-full max-w-6xl px-4">
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl">
+        <div className="rounded-3xl border border-border-soft bg-surface p-6 backdrop-blur-xl">
           <div className="flex flex-wrap items-start gap-4">
             <div className="min-w-0">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Music Hub</p>
-              <h1 className="mt-2 truncate text-3xl font-semibold text-white">
+              <p className="text-xs uppercase tracking-[0.2em] text-text-secondary">Music Hub</p>
+              <h1 className="mt-2 truncate text-3xl font-semibold text-text-primary">
                 {currentPlaylistName}
               </h1>
-              <p className="mt-2 text-sm text-slate-300/80">
+              <p className="mt-2 text-sm text-text-secondary">
                 沉浸式本地与在线音乐管理，极简布局，保留专业播放器能力。
               </p>
             </div>
@@ -114,8 +114,9 @@ export default function App() {
                 onClick={toggleTheme}
                 disabled={isUploading}
                 aria-label="切换主题"
+                data-theme-toggle
               >
-                {theme === 'dark' ? '深色' : '浅色'}
+                切换到{theme === 'dark' ? '浅色' : '深色'}
               </button>
               <input
                 ref={fileInputRef}
@@ -137,7 +138,7 @@ export default function App() {
 
       <div className="relative mx-auto mt-6 flex w-full max-w-6xl gap-4 px-4">
         <PlaylistSidebar onCreateClick={() => setIsPlaylistModalOpen(true)} />
-        <main className="flex-1 rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl">
+        <main className="flex-1 rounded-3xl border border-border-soft bg-surface backdrop-blur-xl">
           <SongList />
           <LyricPanel />
         </main>

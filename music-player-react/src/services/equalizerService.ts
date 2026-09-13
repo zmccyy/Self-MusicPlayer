@@ -144,8 +144,13 @@ export class EqualizerService {
       if (gainsRaw) {
         const parsed = JSON.parse(gainsRaw) as unknown
         if (Array.isArray(parsed)) {
-          const arr = parsed.map((v) => (typeof v === 'number' && Number.isFinite(v) ? v : 0))
-          this.setGainsDb(arr)
+          // 旧版本（6 段）数据与新 10 段频点错位，长度不符时直接按预设重置
+          if (parsed.length === EQ_BAND_COUNT) {
+            const arr = parsed.map((v) => (typeof v === 'number' && Number.isFinite(v) ? v : 0))
+            this.setGainsDb(arr)
+          } else {
+            this.setPreset(presetId)
+          }
         }
       } else {
         this.setPreset(presetId)

@@ -31,18 +31,18 @@ export function LyricEditor({ open, onOpenChange, initialText, onSave }: Props) 
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/55 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-[520px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/15 bg-slate-900/95 p-4 shadow-2xl">
-          <Dialog.Title className="text-base font-medium text-slate-100">
+        <Dialog.Content className="fixed left-1/2 top-1/2 w-[520px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border-strong bg-elevated p-4 shadow-2xl">
+          <Dialog.Title className="text-base font-medium text-text-primary">
             编辑歌词（LRC）
           </Dialog.Title>
 
           <div className="mt-3">
             <textarea
-              className="h-72 w-full resize-none rounded-xl border border-white/15 bg-white/[0.04] p-3 font-mono text-xs text-slate-100 outline-none ring-emerald-400/50 placeholder:text-slate-500 focus:ring-2"
+              className="h-72 w-full resize-none rounded-xl border border-border-strong bg-surface p-3 font-mono text-xs text-text-primary outline-none ring-emerald-400/50 placeholder:text-text-muted focus:ring-2"
               value={text}
               onChange={(e) => setText(e.target.value)}
             />
-            <div className="mt-2 text-xs text-slate-400">每行格式：`[分:秒] 歌词内容`</div>
+            <div className="mt-2 text-xs text-text-secondary">每行格式：`[分:秒] 歌词内容`</div>
           </div>
 
           <div className="mt-4 flex justify-end gap-2">

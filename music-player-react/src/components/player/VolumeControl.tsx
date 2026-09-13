@@ -9,7 +9,7 @@ export function VolumeControl() {
   const displayVolume = isMuted ? 0 : volume
 
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-2 py-1">
+    <div className="flex items-center gap-2 rounded-xl border border-border-soft bg-surface px-2 py-1">
       <button
         className="btn btn-ghost"
         type="button"

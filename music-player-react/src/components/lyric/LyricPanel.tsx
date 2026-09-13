@@ -110,9 +110,9 @@ export function LyricPanel() {
   }
 
   return (
-    <section className="mt-4 border-t border-white/10">
+    <section className="mt-4 border-t border-border-soft">
       <div className="flex items-center justify-between gap-3 p-4">
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">歌词</div>
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-text-secondary">歌词</div>
 
         <div className="flex items-center gap-2">
           <input
@@ -166,10 +166,10 @@ export function LyricPanel() {
       <LyricMatchModal song={currentSong} open={matchOpen} onOpenChange={setMatchOpen} />
 
       {lines.length === 0 ? (
-        <div className="px-4 pb-6 text-sm text-slate-400">暂无歌词（请选择歌曲后上传 .lrc）</div>
+        <div className="px-4 pb-6 text-sm text-text-secondary">暂无歌词（请选择歌曲后上传 .lrc）</div>
       ) : (
         <div ref={linesWrapRef} className="max-h-72 overflow-auto px-4 pb-6">
-          <div className="mb-2 text-xs text-slate-400">
+          <div className="mb-2 text-xs text-text-secondary">
             当前时间：{formatTime(currentTime)}｜高亮行：{activeIndex + 1}
           </div>
           <div className="space-y-1">

@@ -10,7 +10,7 @@ type Props = {
 export function LyricLine({ line, index, isActive, onSeek }: Props) {
   return (
     <div
-      className="cursor-pointer select-none rounded-lg px-2 py-1 text-sm text-slate-300 transition hover:bg-white/8"
+      className="cursor-pointer select-none rounded-lg px-2 py-1 text-sm text-text-secondary transition hover:bg-surface-hover"
       data-line-index={index}
       onClick={() => onSeek(line.time / 1000)}
       style={{
@@ -19,9 +19,9 @@ export function LyricLine({ line, index, isActive, onSeek }: Props) {
           : undefined,
       }}
     >
-      <div className={isActive ? 'text-white' : undefined}>{line.text || ''}</div>
+      <div className={isActive ? 'text-text-primary' : undefined}>{line.text || ''}</div>
       {line.translation ? (
-        <div className="mt-0.5 text-xs text-slate-400">{line.translation}</div>
+        <div className="mt-0.5 text-xs text-text-secondary">{line.translation}</div>
       ) : null}
     </div>
   )

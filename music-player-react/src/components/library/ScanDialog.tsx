@@ -37,15 +37,15 @@ export function ScanDialog({ open, onOpenChange }: Props) {
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/55 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-[520px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/15 bg-slate-900/95 p-5 shadow-2xl">
-          <Dialog.Title className="text-base font-medium text-slate-100">扫描文件夹导入</Dialog.Title>
-          <Dialog.Description className="mt-1 text-sm text-slate-400">
+        <Dialog.Content className="fixed left-1/2 top-1/2 w-[520px] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border-strong bg-elevated p-5 shadow-2xl">
+          <Dialog.Title className="text-base font-medium text-text-primary">扫描文件夹导入</Dialog.Title>
+          <Dialog.Description className="mt-1 text-sm text-text-secondary">
             输入运行后端服务的机器上的音乐目录（递归扫描，自动跳过已导入内容）。
           </Dialog.Description>
 
           <div className="mt-4 flex flex-col gap-3">
             <input
-              className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-slate-100 outline-none ring-emerald-400/50 focus:ring-2"
+              className="w-full rounded-xl border border-border-strong bg-surface px-3 py-2 text-sm text-text-primary outline-none ring-emerald-400/50 focus:ring-2"
               value={dirPath}
               onChange={(e) => setDirPath(e.target.value)}
               placeholder="例如：D:\\Music 或 ~/Music"
@@ -69,11 +69,11 @@ export function ScanDialog({ open, onOpenChange }: Props) {
             {error ? <div className="text-sm text-red-300">{error}</div> : null}
 
             {result ? (
-              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-slate-300">
+              <div className="rounded-xl border border-border-soft bg-surface p-3 text-sm text-text-secondary">
                 <div>
-                  共扫描 <span className="font-medium text-white">{result.scanned}</span> 个音频文件
+                  共扫描 <span className="font-medium text-text-primary">{result.scanned}</span> 个音频文件
                 </div>
-                <div className="mt-1 text-emerald-300">新增 {result.added} 首</div>
+                <div className="mt-1 text-emerald-500">新增 {result.added} 首</div>
                 {result.skipped > 0 ? <div className="mt-1">跳过重复 {result.skipped} 首</div> : null}
                 {result.failed > 0 ? (
                   <div className="mt-1 text-red-300">

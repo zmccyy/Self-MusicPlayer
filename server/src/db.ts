@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS lyrics (
  */
 const MIGRATIONS: string[] = [
   'ALTER TABLE tracks ADD COLUMN checksum TEXT',
+  'ALTER TABLE lyrics ADD COLUMN translation TEXT',
 ];
 
 function runMigrations(conn: DatabaseSync): void {

@@ -19,7 +19,10 @@ export function LyricLine({ line, index, isActive, onSeek }: Props) {
           : undefined,
       }}
     >
-      {line.text || ''}
+      <div className={isActive ? 'text-white' : undefined}>{line.text || ''}</div>
+      {line.translation ? (
+        <div className="mt-0.5 text-xs text-slate-400">{line.translation}</div>
+      ) : null}
     </div>
   )
 }

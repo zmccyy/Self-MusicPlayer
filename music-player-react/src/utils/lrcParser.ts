@@ -1,14 +1,16 @@
 export type LyricLine = {
   time: number // milliseconds
   text: string
+  translation?: string
 }
 
 /**
  * LRC 歌词解析器
- * 支持标准 LRC 格式，包括 [mm:ss.xx] 和 [mm:ss] 时间标签
+ * 支持标准 LRC 格式，包括 [mm:ss.xx] 和 [mm:ss] 时间标签；
+ * 可选传入翻译 LRC，按时间就近合并到原文行。
  */
 export class LrcParser {
-  static parse(lrcText: string): LyricLine[] {
+  static parse(lrcText: string, translationText?: string | null): LyricLine[] {
     if (!lrcText || typeof lrcText !== 'string') return []
 
     const lines = lrcText.trim().split(/\r?\n/)
@@ -50,7 +52,31 @@ export class LrcParser {
     }
 
     lyricLines.sort((a, b) => a.time - b.time)
+
+    if (translationText) {
+      LrcParser.mergeTranslations(lyricLines, translationText)
+    }
     return lyricLines
+  }
+
+  /** 把翻译 LRC 按时间就近（±500ms 内取最近）合并到原文行。 */
+  static mergeTranslations(lines: LyricLine[], translationText: string): void {
+    if (!translationText) return
+    const translated = LrcParser.parse(translationText)
+    for (const line of lines) {
+      let best: LyricLine | null = null
+      let bestDelta = Number.POSITIVE_INFINITY
+      for (const t of translated) {
+        const delta = Math.abs(t.time - line.time)
+        if (delta < bestDelta) {
+          bestDelta = delta
+          best = t
+        }
+      }
+      if (best && bestDelta <= 500 && best.text) {
+        line.translation = best.text
+      }
+    }
   }
 
   /**

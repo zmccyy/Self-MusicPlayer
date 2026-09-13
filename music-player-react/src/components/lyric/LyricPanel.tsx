@@ -5,6 +5,7 @@ import { LrcParser } from '../../utils/lrcParser'
 import type { LyricLine, Lyric } from '../../types/lyric'
 import { LyricLine as LyricLineView } from './LyricLine'
 import { LyricEditor } from './LyricEditor'
+import { LyricMatchModal } from './LyricMatchModal'
 import { formatTime } from '../../utils/formatTime'
 
 export function LyricPanel() {
@@ -15,6 +16,7 @@ export function LyricPanel() {
   const [lines, setLines] = useState<LyricLine[]>([])
   const [activeIndex, setActiveIndex] = useState(-1)
   const [editorOpen, setEditorOpen] = useState(false)
+  const [matchOpen, setMatchOpen] = useState(false)
 
   const [isSaving, setIsSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -43,7 +45,7 @@ export function LyricPanel() {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSong?.id])
+  }, [currentSong?.id, matchOpen])
 
   useEffect(() => {
     const idx = findActiveLyricIndex(lines, currentTime)
@@ -128,6 +130,14 @@ export function LyricPanel() {
           <button
             className="btn btn-secondary min-h-8 px-3 py-1 text-sm"
             type="button"
+            onClick={() => setMatchOpen(true)}
+            disabled={!currentSong}
+          >
+            在线匹配
+          </button>
+          <button
+            className="btn btn-secondary min-h-8 px-3 py-1 text-sm"
+            type="button"
             onClick={openUpload}
             disabled={!currentSong || isSaving}
           >
@@ -152,6 +162,8 @@ export function LyricPanel() {
           await handleSaveEditor(text)
         }}
       />
+
+      <LyricMatchModal song={currentSong} open={matchOpen} onOpenChange={setMatchOpen} />
 
       {lines.length === 0 ? (
         <div className="px-4 pb-6 text-sm text-slate-400">暂无歌词（请选择歌曲后上传 .lrc）</div>

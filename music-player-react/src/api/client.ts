@@ -155,6 +155,7 @@ export async function updateTrack(
 export interface LyricPayload {
   trackId: string
   lyric: string | null
+  translation: string | null
   source: string
 }
 
@@ -162,8 +163,19 @@ export async function fetchTrackLyric(trackId: string): Promise<LyricPayload> {
   return request<LyricPayload>(`/api/tracks/${trackId}/lyric`)
 }
 
-export async function saveTrackLyric(trackId: string, content: string, source = 'manual'): Promise<void> {
-  await request(`/api/tracks/${trackId}/lyric`, json({ method: 'POST', body: JSON.stringify({ content, source }) }))
+export async function saveTrackLyric(
+  trackId: string,
+  content: string,
+  source = 'manual',
+  translation?: string | null,
+): Promise<void> {
+  await request(
+    `/api/tracks/${trackId}/lyric`,
+    json({
+      method: 'POST',
+      body: JSON.stringify({ content, source, translation: translation ?? undefined }),
+    }),
+  )
 }
 
 // ---------- playlists ----------
@@ -230,4 +242,14 @@ export async function searchNetease(keyword: string, limit = 20): Promise<Online
     `/api/netease/search?keyword=${encodeURIComponent(keyword)}&limit=${limit}`,
   )
   return data.songs
+}
+
+export interface NeteaseLyrics {
+  songId: string
+  lrc: string | null
+  translation: string | null
+}
+
+export async function fetchNeteaseLyrics(songId: string): Promise<NeteaseLyrics> {
+  return request<NeteaseLyrics>(`/api/netease/lyrics/${songId}`)
 }

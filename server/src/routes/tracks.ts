@@ -287,13 +287,14 @@ tracksRouter.get(
   '/:id/lyric',
   asyncHandler(async (req, res) => {
     const row = getTrackRow(String(req.params.id));
-    const content = queryOne<{ content: string; source: string }>(
-      'SELECT content, source FROM lyrics WHERE track_id = ?',
+    const content = queryOne<{ content: string; translation: string | null; source: string }>(
+      'SELECT content, translation, source FROM lyrics WHERE track_id = ?',
       row.id,
     );
     res.json({
       trackId: row.id,
       lyric: content?.content ?? null,
+      translation: content?.translation ?? null,
       source: content?.source ?? 'none',
     });
   }),
@@ -305,9 +306,20 @@ tracksRouter.post(
     const row = getTrackRow(String(req.params.id));
     const content = typeof req.body?.content === 'string' ? req.body.content : '';
     if (!content.trim()) throw new ApiError(400, 'lyric content is required');
-    const source = req.body?.source === 'manual' || req.body?.source === 'external' ? req.body.source : 'manual';
-    runSql('INSERT OR REPLACE INTO lyrics (track_id, content, source) VALUES (?, ?, ?)', row.id, content, source);
+    const translation =
+      typeof req.body?.translation === 'string' && req.body.translation.trim()
+        ? req.body.translation
+        : null;
+    const source =
+      req.body?.source === 'manual' || req.body?.source === 'external' ? req.body.source : 'manual';
+    runSql(
+      'INSERT OR REPLACE INTO lyrics (track_id, content, translation, source) VALUES (?, ?, ?, ?)',
+      row.id,
+      content,
+      translation,
+      source,
+    );
     runSql('UPDATE tracks SET has_lyric = 1 WHERE id = ?', row.id);
-    res.status(201).json({ ok: true, trackId: row.id, source });
+    res.status(201).json({ ok: true, trackId: row.id, source, hasTranslation: translation !== null });
   }),
 );
